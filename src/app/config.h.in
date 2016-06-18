@@ -1,0 +1,2 @@
+#define shooty_face_VERSION_MINOR @shooty_face_VERSION_MINOR@
+#define shooty_face_VERSION_MAJOR @shooty_face_VERSION_MAJOR@
