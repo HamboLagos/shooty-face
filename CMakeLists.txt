@@ -11,29 +11,32 @@ endif()
 project(shooty_face)
 
 # Set version information in a config.h file
-set(shooty_face 0)
-set(shooty_face 0)
+set(shooty_face_VERSION_MAJOR 0)
+set(shooty_face_VERSION_MINOR 0)
+set(shooty_face_VERSION_REVIS 1)
 configure_file(
-  "${PROJECT_SOURCE_DIR}/config.h.in"
-  "${PROJECT_BINARY_DIR}/config.h"
+  "${PROJECT_SOURCE_DIR}/src/app/config.h.in"
+  "${PROJECT_BINARY_DIR}/src/app/config.h"
   )
-include_directories("${PROJECT_BINARY_DIR}")
+include_directories("${PROJECT_BINARY_DIR}/src/app")
 
 # Define sources and executable
 set(EXECUTABLE_NAME "shooty_face")
-add_executable(${EXECUTABLE_NAME} main.cpp)
+add_executable(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/src/app/main.cpp)
 
 
 # Detect and add SFML
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules" ${CMAKE_MODULE_PATH})
-#Find any version 2.X of SFML
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
+
+#Find any version 2.3 of SFML
 #See the FindSFML.cmake file for additional details and instructions
-find_package(SFML 2 REQUIRED system window graphics network audio)
+set(SFML_ROOT "${PROJECT_SOURCE_DIR}/lib/SFML")
+find_package(SFML 2.3 REQUIRED system window graphics network audio)
 if(SFML_FOUND)
   include_directories(${SFML_INCLUDE_DIR})
   target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})
 endif()
 
 
-# Install target
-install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+## Install target
+#install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)

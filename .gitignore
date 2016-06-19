@@ -32,6 +32,7 @@
 *.pyc
 
 # Project Specific Exclusions
-**/*/bin
-lib/SFML/examples
-
+**/bin/
+**/build/
+**/SFML/examples/
+**/SFML/lib/
