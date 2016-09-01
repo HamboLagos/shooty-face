@@ -1,5 +1,5 @@
 # Installation
-* Follow cmake tutorial to build and install, overriding a few options. These
+*  Follow cmake tutorial to build and install, overriding a few options. These
 should work fine for Linux, refer to docs for other OS's or building for
 distribution
     * C_COMPILER and CXX_COMPILER to clang and clang++

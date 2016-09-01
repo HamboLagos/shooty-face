@@ -1,42 +1,30 @@
-#Change this if you need to target a specific CMake version
 cmake_minimum_required(VERSION 3.5)
+project(ShootyFace)
 
-# Enable debug symbols by default
-# must be done before project() statement
-# (you can also set it on the command line: -D CMAKE_BUILD_TYPE=Release)
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
-endif()
-
-project(shooty_face)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_BUILD_TYPE Debug)
 
 # Set version information in a config.h file
 set(shooty_face_VERSION_MAJOR 0)
 set(shooty_face_VERSION_MINOR 0)
 set(shooty_face_VERSION_REVIS 1)
 configure_file(
-  "${PROJECT_SOURCE_DIR}/src/app/config.h.in"
-  "${PROJECT_BINARY_DIR}/src/app/config.h"
-  )
-include_directories("${PROJECT_BINARY_DIR}/src/app")
+  "${PROJECT_SOURCE_DIR}/src/config.h.in"
+  "${PROJECT_BINARY_DIR}/src/config.h"
+)
+include_directories("${PROJECT_BINARY_DIR}/src/")
 
-# Define sources and executable
-set(EXECUTABLE_NAME "shooty_face")
-add_executable(${EXECUTABLE_NAME} ${PROJECT_SOURCE_DIR}/src/app/main.cpp)
-
-
-# Detect and add SFML
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules" ${CMAKE_MODULE_PATH})
-
-#Find any version 2.3 of SFML
-#See the FindSFML.cmake file for additional details and instructions
-set(SFML_ROOT "${PROJECT_SOURCE_DIR}/lib/SFML")
+# find SFML (built separately in vendor/SFML)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/" ${CMAKE_MODULE_PATH})
+set(SFML_ROOT "${PROJECT_SOURCE_DIR}/lib/SFML/")
 find_package(SFML 2.3 REQUIRED system window graphics network audio)
-if(SFML_FOUND)
-  include_directories(${SFML_INCLUDE_DIR})
-  target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})
-endif()
+include_directories(${SFML_INCLUDE_DIR})
 
+# Builds the game executable
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+add_subdirectory(src)
 
-## Install target
-#install(TARGETS ${EXECUTABLE_NAME} DESTINATION bin)
+# Builds the tests
+enable_testing()
+add_subdirectory(utests)
