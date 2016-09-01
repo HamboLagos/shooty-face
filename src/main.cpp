@@ -17,15 +17,70 @@ int main(int argc, char *argv[])
     app.setFramerateLimit(60);
 
     Player player;
-    player.set_position({350, 250});
+    player.set_position({400.f, 300.f});
+    player.set_velocity({5.f, 10.f});
 
-    while(app.isOpen()) {
+    while (app.isOpen()) {
+
         sf::Event event;
-        while(app.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+        while (app.pollEvent(event)) {
+            switch (event.type) {
+
+            case sf::Event::Closed:
                 app.close();
+                break;
+
+            case sf::Event::KeyReleased:
+
+                switch (event.key.code) {
+                case sf::Keyboard::Escape:
+                    app.close();
+                    break;
+                case sf::Keyboard::W:
+                    player.stop_move(Player::Direction::UP);
+                    break;
+                case sf::Keyboard::A:
+                    player.stop_move(Player::Direction::LEFT);
+                    break;
+                case sf::Keyboard::S:
+                    player.stop_move(Player::Direction::DOWN);
+                    break;
+                case sf::Keyboard::D:
+                    player.stop_move(Player::Direction::RIGHT);
+                    break;
+                default:
+                    break;
+                }
+
+                break;
+
+            case sf::Event::KeyPressed:
+
+                switch (event.key.code) {
+                case sf::Keyboard::W:
+                    player.start_move(Player::Direction::UP);
+                    break;
+                case sf::Keyboard::A:
+                    player.start_move(Player::Direction::LEFT);
+                    break;
+                case sf::Keyboard::S:
+                    player.start_move(Player::Direction::DOWN);
+                    break;
+                case sf::Keyboard::D:
+                    player.start_move(Player::Direction::RIGHT);
+                    break;
+                default:
+                    break;
+                }
+
+                break;
+
+            default:
+                break;
             }
         }
+
+        player.update();
 
         app.clear(sf::Color::White);
         app.draw(player.render());
