@@ -36,7 +36,7 @@ TEST_F(Transformations, StartMoveBeginsAVelocityChange)
 {
     // start at <0, 0>
     sut.set_position({0.f, 0.f});
-    sut.set_velocity({1.f, 1.f});
+    sut.set_move_velocity({1.f, 1.f});
 
     sut.start_move(Player::Direction::UP);
     sut.start_move(Player::Direction::RIGHT);
@@ -80,7 +80,7 @@ TEST_F(Transformations, StartMoveBeginsAVelocityChange)
 TEST_F(Transformations, SetVelocityChangesTheMoveSpeed)
 {
     sut.set_position({0.f, 0.f});
-    sut.set_velocity({0.f, 0.f});
+    sut.set_move_velocity({0.f, 0.f});
     sut.start_move(Player::Direction::RIGHT);
     sut.start_move(Player::Direction::DOWN);
     sut.update();
@@ -88,7 +88,7 @@ TEST_F(Transformations, SetVelocityChangesTheMoveSpeed)
     EXPECT_FLOAT_EQ(sut.get_position().x, 0.f);
     EXPECT_FLOAT_EQ(sut.get_position().y, 0.f);
 
-    sut.set_velocity({1.f, 2.f});
+    sut.set_move_velocity({1.f, 2.f});
     sut.update();
 
     EXPECT_FLOAT_EQ(sut.get_position().x, 1.f);

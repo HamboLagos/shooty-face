@@ -4,14 +4,16 @@
 
 Player::Player() :
     position_(0.f, 0.f),
+    dimensions_(50.f, 50.f),
     velocity_(0.f, 0.f),
-    graphic_(sf::Vector2f(50.f, 50.f)),
+    graphic_(dimensions_),
     projectile_(nullptr),
     moving_up_(false),
     moving_left_(false),
     moving_down_(false),
     moving_right_(false)
 {
+    graphic_.setOrigin(get_AABB().get_extents()); // set the origin to the center
     graphic_.setFillColor(sf::Color::Black);
 }
 
@@ -40,6 +42,12 @@ Player::update()
     }
 }
 
+AABB
+Player::get_AABB()
+{
+    return AABB(position_, dimensions_);
+}
+
 void
 Player::set_position(sf::Vector2f position)
 {
@@ -47,7 +55,7 @@ Player::set_position(sf::Vector2f position)
 }
 
 void
-Player::set_velocity(sf::Vector2f velocity)
+Player::set_move_velocity(sf::Vector2f velocity)
 {
     velocity_ = velocity;
 }
@@ -135,7 +143,7 @@ void Player::set_projectile_speed(float speed)
     projectile_speed_ = speed;
 }
 
-Player::Projectile* Player::get_projectile() const
+Projectile* Player::get_projectile() const
 {
     return projectile_;
 }

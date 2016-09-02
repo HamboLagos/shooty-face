@@ -2,6 +2,9 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "projectile.hpp"
+#include "AABB.hpp"
+
 class Player
 {
 public:
@@ -13,51 +16,19 @@ public:
         RIGHT
     };
 
-    class Projectile
-    {
-    public:
-        Projectile(sf::Vector2f position, sf::Vector2f velocity) :
-            position_(position),
-            velocity_(velocity),
-            graphic_(10.f)
-        {
-            graphic_.setFillColor(sf::Color::Red);
-        }
-
-        sf::Vector2f get_position() const { return position_; }
-        void set_position(sf::Vector2f position)
-        { position_ = position; }
-
-        sf::Vector2f get_velocity() const { return velocity_; }
-        void set_velocity(sf::Vector2f velocity)
-        {  velocity_ = velocity; }
-
-        void update() { position_ += velocity_; }
-
-        const sf::CircleShape render()
-        {
-            graphic_.setPosition(position_);
-            return graphic_;
-        }
-
-    private:
-        sf::Vector2f position_;
-        sf::Vector2f velocity_;
-
-        sf::CircleShape graphic_;
-    };
-
     Player();
 
     void update();
 
+    AABB get_AABB();
+
     /** \brief Set the absolute position <x, y>. */
     void set_position(sf::Vector2f position);
 
-    /** \brief Set the <x, y> velocity of the player.
+    /** \brief Set the <x, y> velocity of the player when moving.
      *
      * X and Y velocities are independent of each other.*/
-    void set_velocity(sf::Vector2f velocity);
+    void set_move_velocity(sf::Vector2f velocity);
 
     /** \brief Move the given distance <x, y>. */
     void move(sf::Vector2f distance);
@@ -85,6 +56,7 @@ public:
 
 private:
     sf::Vector2f position_;
+    sf::Vector2f dimensions_;
     sf::Vector2f velocity_;
     sf::RectangleShape graphic_;
 

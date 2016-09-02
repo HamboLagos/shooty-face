@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "player.hpp"
+#include "collision.hpp"
 
 using namespace std;
 
@@ -18,8 +19,11 @@ int main(int argc, char *argv[])
 
     Player player;
     player.set_position({400.f, 300.f});
-    player.set_velocity({5.f, 10.f});
+    player.set_move_velocity({5.f, 10.f});
     player.set_projectile_speed(20.f);
+
+    sf::Vector2f dimensions = {500.f, 500.f};
+    AABB left_wall({0 - dimensions.x/2, 0+ dimensions.y/2}, dimensions);
 
     while (app.isOpen()) {
 
@@ -86,6 +90,10 @@ int main(int argc, char *argv[])
         }
 
         player.update();
+
+        if (Collision::test(player.get_AABB(), left_wall)) {
+            std::cout << "It's Working." << std::endl;
+        }
 
         app.clear(sf::Color::White);
         app.draw(player.render());
