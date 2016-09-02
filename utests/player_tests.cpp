@@ -105,3 +105,47 @@ TEST_F(Render, ReturnsAShapeWithCorrectPosition)
     EXPECT_FLOAT_EQ(graphic.getPosition().x, 100.f);
     EXPECT_FLOAT_EQ(graphic.getPosition().y, 200.f);
 }
+
+class Shoot : public TestablePlayer { };
+
+TEST_F(Shoot, FiresAProjectileAtTheTarget)
+{
+    sut.set_position({0.f, 0.f});
+    sut.set_projectile_speed(5.f);
+
+    // shoot in the x direction
+    sut.shoot({1, 0});
+    sut.update();
+
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 5.f);
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 0.f);
+
+    sut.update();
+
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 10.f);
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 0.f);
+
+    // shoot in the y direction
+    sut.shoot({0, -1});
+    sut.update();
+
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 0.f);
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, -5.f);
+
+    sut.update();
+
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 0.f);
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, -10.f);
+
+    // shoot in the x and y directions
+    sut.shoot({3, 4});
+    sut.update();
+
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 3.f);
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 4.f);
+
+    sut.update();
+
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 6.f);
+    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 8.f);
+}

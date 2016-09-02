@@ -1,9 +1,12 @@
 #include "player.hpp"
 
+#include <cmath>
+
 Player::Player() :
     position_(0.f, 0.f),
     velocity_(0.f, 0.f),
     graphic_(sf::Vector2f(50.f, 50.f)),
+    projectile_(nullptr),
     moving_up_(false),
     moving_left_(false),
     moving_down_(false),
@@ -31,6 +34,10 @@ Player::update()
     }
 
     move({dx, dy});
+
+    if (projectile_ != nullptr) {
+        projectile_->update();
+    }
 }
 
 void
@@ -104,9 +111,33 @@ Player::stop_move(Player::Direction direction)
 }
 
 sf::Vector2f
-Player::get_position()
+Player::get_position() const
 {
     return position_;
+}
+
+void Player::shoot(sf::Vector2i target)
+{
+    if (projectile_ != nullptr) {
+        delete projectile_;
+    }
+
+    sf::Vector2f vector = sf::Vector2f(target) - get_position();
+    float vector_length = sqrt(vector.x*vector.x + vector.y*vector.y);
+    sf::Vector2f unit_vector = vector / vector_length;
+    sf::Vector2f projectile_velocity = projectile_speed_ * unit_vector;
+
+    projectile_ = new Projectile(get_position(), projectile_velocity);
+}
+
+void Player::set_projectile_speed(float speed)
+{
+    projectile_speed_ = speed;
+}
+
+Player::Projectile* Player::get_projectile() const
+{
+    return projectile_;
 }
 
 const sf::RectangleShape&

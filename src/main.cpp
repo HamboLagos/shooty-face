@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     Player player;
     player.set_position({400.f, 300.f});
     player.set_velocity({5.f, 10.f});
+    player.set_projectile_speed(20.f);
 
     while (app.isOpen()) {
 
@@ -75,6 +76,10 @@ int main(int argc, char *argv[])
 
                 break;
 
+            case sf::Event::MouseButtonReleased:
+                player.shoot(sf::Mouse::getPosition(app));
+                break;
+
             default:
                 break;
             }
@@ -84,6 +89,10 @@ int main(int argc, char *argv[])
 
         app.clear(sf::Color::White);
         app.draw(player.render());
+        auto* projectile = player.get_projectile();
+        if (projectile != nullptr) {
+            app.draw(projectile->render());
+        }
         app.display();
     }
     return 0;
