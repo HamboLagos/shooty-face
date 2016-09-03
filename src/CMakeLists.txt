@@ -5,5 +5,6 @@ add_executable(${EXECUTABLE_NAME}
     ${PROJECT_SOURCE_DIR}/src/player.cpp
     ${PROJECT_SOURCE_DIR}/src/projectile.cpp
     ${PROJECT_SOURCE_DIR}/src/collision.cpp
+    ${PROJECT_SOURCE_DIR}/src/enemy.cpp
 )
 target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})

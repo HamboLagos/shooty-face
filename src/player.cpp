@@ -38,7 +38,12 @@ Player::update()
     move({dx, dy});
 
     if (projectile_ != nullptr) {
-        projectile_->update();
+        if (projectile_->is_alive()) {
+            projectile_->update();
+        } else {
+            delete projectile_;
+            projectile_ = nullptr;
+        }
     }
 }
 
