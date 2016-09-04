@@ -3,43 +3,42 @@
 #include <cmath>
 
 Player::Player() :
-    position_(0.f, 0.f),
-    dimensions_(50.f, 50.f),
-    velocity_(0.f, 0.f),
-    graphic_(dimensions_),
-    projectile_(nullptr),
-    moving_up_(false),
-    moving_left_(false),
-    moving_down_(false),
-    moving_right_(false)
+    graphic_(),
+    projectile_speed_(0.f),
+    projectile_(nullptr)
+{ }
+
+Player::~Player()
 {
-    graphic_.setOrigin(get_AABB().get_extents()); // set the origin to the center
-    graphic_.setFillColor(sf::Color::Black);
+    if (projectile_ != nullptr) {
+        delete projectile_;
+    }
 }
 
 void
-Player::update()
+Player::update(sf::Time elapsed)
 {
-    float dy = 0.f;
+    float dt = elapsed.asSeconds();
     float dx = 0.f;
+    float dy = 0.f;
 
-    if (moving_up_ && !moving_down_) {
-        dy = -velocity_.y;
-    } else if (moving_down_ && !moving_up_) {
-        dy = velocity_.y;
+    if (is_moving.left && !is_moving.right) {
+        dx = -get_velocity().x * dt;
+    } else if (is_moving.right && !is_moving.left) {
+        dx = get_velocity().x * dt;
     }
 
-    if (moving_left_ && !moving_right_) {
-        dx = -velocity_.x;
-    } else if (moving_right_ && !moving_left_) {
-        dx = velocity_.x;
+    if (is_moving.up && !is_moving.down) {
+        dy = -get_velocity().y * dt;
+    } else if (is_moving.down && !is_moving.up) {
+        dy = get_velocity().y * dt;
     }
 
     move({dx, dy});
 
     if (projectile_ != nullptr) {
         if (projectile_->is_alive()) {
-            projectile_->update();
+            projectile_->update(elapsed);
         } else {
             delete projectile_;
             projectile_ = nullptr;
@@ -47,100 +46,42 @@ Player::update()
     }
 }
 
-AABB
-Player::get_AABB()
+const sf::Drawable&
+Player::render()
 {
-    return AABB(position_, dimensions_);
+    graphic_.setSize(get_dimensions());
+    graphic_.setOrigin(get_extents());
+    graphic_.setPosition(get_position());
+    graphic_.setFillColor(sf::Color::Black);
+    return graphic_;
 }
 
 void
-Player::set_position(sf::Vector2f position)
+Player::start_move(Direction direction)
 {
-    position_ = position;
+    is_moving.set(true, direction);
 }
 
 void
-Player::set_move_velocity(sf::Vector2f velocity)
+Player::stop_move(Direction direction)
 {
-    velocity_ = velocity;
+    is_moving.set(false, direction);
 }
 
-void
-Player::move(sf::Vector2f distance)
-{
-    position_ += distance;
-}
-
-void
-Player::start_move(Player::Direction direction)
-{
-    switch (direction) {
-
-    case Direction::UP:
-        moving_up_ = true;
-        break;
-
-    case Direction::LEFT:
-        moving_left_ = true;
-        break;
-
-    case Direction::DOWN:
-        moving_down_ = true;
-        break;
-
-    case Direction::RIGHT:
-        moving_right_ = true;
-        break;
-
-    default:
-        break;
-    }
-}
-
-void
-Player::stop_move(Player::Direction direction)
-{
-    switch (direction) {
-
-    case Direction::UP:
-        moving_up_ = false;
-        break;
-
-    case Direction::LEFT:
-        moving_left_ = false;
-        break;
-
-    case Direction::DOWN:
-        moving_down_ = false;
-        break;
-
-    case Direction::RIGHT:
-        moving_right_ = false;
-        break;
-
-    default:
-        break;
-    }
-}
-
-sf::Vector2f
-Player::get_position() const
-{
-    return position_;
-}
-
-void Player::shoot(sf::Vector2i target)
+void Player::shoot(sf::Vector2f target)
 {
     if (projectile_ != nullptr) {
         delete projectile_;
     }
 
-    sf::Vector2f vector = sf::Vector2f(target) - get_position();
+    sf::Vector2f vector = target - get_position();
     float vector_length = sqrt(vector.x*vector.x + vector.y*vector.y);
     sf::Vector2f unit_vector = vector / vector_length;
     sf::Vector2f projectile_velocity = projectile_speed_ * unit_vector;
 
-    projectile_ = new Projectile(get_position(), projectile_velocity);
+    projectile_ = new Projectile();
+    projectile_->set_position(get_position());
+    projectile_->set_velocity(projectile_velocity);
 }
 
 void Player::set_projectile_speed(float speed)
@@ -153,9 +94,28 @@ Projectile* Player::get_projectile() const
     return projectile_;
 }
 
-const sf::RectangleShape&
-Player::render()
+void
+Player::MovementDirections::set(bool is_moving, Direction direction)
 {
-    graphic_.setPosition(position_);
-    return graphic_;
+    switch (direction) {
+
+    case Direction::UP:
+        up = is_moving;
+        break;
+
+    case Direction::LEFT:
+        left = is_moving;
+        break;
+
+    case Direction::DOWN:
+        down = is_moving;
+        break;
+
+    case Direction::RIGHT:
+        right = is_moving;
+        break;
+
+    default:
+        break;
+    }
 }

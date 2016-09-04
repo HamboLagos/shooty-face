@@ -27,7 +27,7 @@ public:
     inline float get_x_extent() const { return dimensions_.x/2.f; }
     inline float get_y_extent() const { return dimensions_.y/2.f; }
 
-    inline bool contains_point(sf::Vector2f point)
+    inline bool contains_point(sf::Vector2f point) const
     {
         sf::Vector2f min = origin_ - get_extents();
         sf::Vector2f max = origin_ + get_extents();
@@ -39,14 +39,14 @@ public:
             max.y > point.y;
     }
 
-    inline bool operator==(const AABB& other)
+    inline bool operator==(const AABB& other) const
     {
         return
             origin_     == other.origin_ &&
             dimensions_ == other.dimensions_;
     }
 
-    inline bool operator!=(const AABB& other)
+    inline bool operator!=(const AABB& other) const
     {
         return !(*this == other);
     }

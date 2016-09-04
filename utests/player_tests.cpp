@@ -1,151 +1,130 @@
 #include <gtest.h>
 #include <gmock.h>
 
-#include <player.hpp>
+#include "player.hpp"
 
 using namespace testing;
 
 class TestablePlayer : public Test
 {
-public:
+protected:
     Player sut;
+
+    auto& get_graphic() { return sut.graphic_; }
 };
 
-class Transformations : public TestablePlayer { };
-
-TEST_F(Transformations, SetPositionChangesAbsolutePosition)
+class Transformations : public TestablePlayer
 {
-    sut.set_position({100.f, 200.f});
-    EXPECT_FLOAT_EQ(sut.get_position().x, 100.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, 200.f);
-
-    sut.set_position({900.f, 20.2f});
-    EXPECT_FLOAT_EQ(sut.get_position().x, 900.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, 20.2f);
-}
-
-TEST_F(Transformations, MoveChangesRelativePosition)
-{
-    sut.set_position({100.f, 200.f});
-    sut.move({10.f, -20.f});
-    EXPECT_FLOAT_EQ(sut.get_position().x, 110.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, 180.f);
-}
+protected:
+    static const sf::Vector2f position_;
+    static const sf::Vector2f velocity_;
+    static const sf::Time dt_;
+};
+const sf::Vector2f Transformations::position_ = {10.f, 20.f};
+const sf::Vector2f Transformations::velocity_ = {1.f, 2.f};
+const sf::Time Transformations::dt_ = sf::seconds(1.f);
 
 TEST_F(Transformations, StartMoveBeginsAVelocityChange)
 {
-    // start at <0, 0>
-    sut.set_position({0.f, 0.f});
-    sut.set_move_velocity({1.f, 1.f});
+    sut.set_position(position_);
+    sut.set_velocity(velocity_);
+
+    sut.start_move(Player::Direction::DOWN);
+    sut.start_move(Player::Direction::RIGHT);
+    sut.update(dt_);
+
+    EXPECT_EQ(sut.get_position(), sf::Vector2f({11.f, 22.f}));
+
+    sut.stop_move(Player::Direction::DOWN);
+    sut.stop_move(Player::Direction::RIGHT);
+    sut.start_move(Player::Direction::UP);
+    sut.start_move(Player::Direction::LEFT);
+    sut.update(dt_);
+
+    EXPECT_EQ(sut.get_position(), sf::Vector2f({10.f, 20.f}));
+}
+
+TEST_F(Transformations, StartMoveInOppositeDirectionsCancelEachOther)
+{
+    sut.set_position(position_);
+    sut.set_velocity(velocity_);
+
+    sut.start_move(Player::Direction::DOWN);
+    sut.start_move(Player::Direction::RIGHT);
+    sut.update(dt_);
 
     sut.start_move(Player::Direction::UP);
-    sut.start_move(Player::Direction::RIGHT);
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_position().x, 1.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, -1.f);
-
-    sut.update();
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_position().x, 3.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, -3.f);
-
-    // active move in opposite directions cancels movement
-    sut.start_move(Player::Direction::DOWN);
     sut.start_move(Player::Direction::LEFT);
+    sut.update(dt_);
 
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_position().x, 3.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, -3.f);
-
-    // stop original movements, secondary movements active
-    sut.stop_move(Player::Direction::UP);
-    sut.stop_move(Player::Direction::RIGHT);
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_position().x, 2.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, -2.f);
-
-    // stop secondary movements, now stationary
-    sut.stop_move(Player::Direction::DOWN);
-    sut.stop_move(Player::Direction::LEFT);
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_position().x, 2.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, -2.f);
+    EXPECT_EQ(sut.get_position(), sf::Vector2f({11.f, 22.f}));
 }
 
-TEST_F(Transformations, SetVelocityChangesTheMoveSpeed)
+TEST_F(Transformations, StopMoveCancelsMoveInGivenDirection)
 {
-    sut.set_position({0.f, 0.f});
-    sut.set_move_velocity({0.f, 0.f});
-    sut.start_move(Player::Direction::RIGHT);
+    sut.set_position(position_);
+    sut.set_velocity(velocity_);
+
     sut.start_move(Player::Direction::DOWN);
-    sut.update();
+    sut.start_move(Player::Direction::RIGHT);
+    sut.update(dt_);
 
-    EXPECT_FLOAT_EQ(sut.get_position().x, 0.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, 0.f);
+    EXPECT_EQ(sut.get_position(), sf::Vector2f({11.f, 22.f}));
 
-    sut.set_move_velocity({1.f, 2.f});
-    sut.update();
+    sut.stop_move(Player::Direction::DOWN);
+    sut.stop_move(Player::Direction::RIGHT);
+    sut.update(dt_);
 
-    EXPECT_FLOAT_EQ(sut.get_position().x, 1.f);
-    EXPECT_FLOAT_EQ(sut.get_position().y, 2.f);
+    EXPECT_EQ(sut.get_position(), sf::Vector2f({11.f, 22.f}));
 }
 
-class Render : public TestablePlayer { };
-
-TEST_F(Render, ReturnsAShapeWithCorrectPosition)
+class Render : public TestablePlayer
 {
-    sut.set_position({100.f, 200.f});
+protected:
+    static const sf::Vector2f position_;
+    static const sf::Vector2f dimensions_;
+};
+const sf::Vector2f Render::position_ = {100.f, 200.f};
+const sf::Vector2f Render::dimensions_ = {10.f, 20.f};
+
+TEST_F(Render, InitializesGraphicWithCorrectPositionAndSize)
+{
+    sut.set_position(position_);
+    sut.set_dimensions(dimensions_);
     auto& graphic = sut.render();
 
-    EXPECT_FLOAT_EQ(graphic.getPosition().x, 100.f);
-    EXPECT_FLOAT_EQ(graphic.getPosition().y, 200.f);
+    EXPECT_EQ(get_graphic().getPosition(), sf::Vector2f(100.f, 200.f));
+    EXPECT_EQ(get_graphic().getSize(), sf::Vector2f(10.f, 20.f));
+
+    sut.move({10.f, 20.f});
+    sut.scale(4.f);
+    sut.render();
+
+    EXPECT_EQ(get_graphic().getPosition(), sf::Vector2f(110.f, 220.f));
+    EXPECT_EQ(get_graphic().getSize(), sf::Vector2f(40.f, 80.f));
 }
 
-class Shoot : public TestablePlayer { };
+class Shoot : public TestablePlayer
+{
+protected:
+    static const sf::Vector2f position_;
+    static const sf::Vector2f target_;
+    static const float projectile_speed_;
+};
+const sf::Vector2f Shoot::position_  = {10.f, 20.f};
+const sf::Vector2f Shoot::target_    = {13.f, 24.f};
+const float Shoot::projectile_speed_ = 5.f;
 
 TEST_F(Shoot, FiresAProjectileAtTheTarget)
 {
-    sut.set_position({0.f, 0.f});
-    sut.set_projectile_speed(5.f);
+    sut.set_position(position_);
+    sut.set_projectile_speed(projectile_speed_);
+    sut.shoot(target_);
+    auto& projectile = *sut.get_projectile();
 
-    // shoot in the x direction
-    sut.shoot({1, 0});
-    sut.update();
+    EXPECT_EQ(projectile.get_position(), sf::Vector2f(10.f, 20.f));
+    EXPECT_EQ(projectile.get_velocity(), sf::Vector2f(3.f, 4.f));
 
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 5.f);
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 0.f);
-
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 10.f);
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 0.f);
-
-    // shoot in the y direction
-    sut.shoot({0, -1});
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 0.f);
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, -5.f);
-
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 0.f);
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, -10.f);
-
-    // shoot in the x and y directions
-    sut.shoot({3, 4});
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 3.f);
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 4.f);
-
-    sut.update();
-
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().x, 6.f);
-    EXPECT_FLOAT_EQ(sut.get_projectile()->get_position().y, 8.f);
+    projectile.update(sf::seconds(0.5f));
+    EXPECT_EQ(projectile.get_position(), sf::Vector2f(11.5f, 22.f));
 }

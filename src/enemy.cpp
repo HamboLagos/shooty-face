@@ -1,69 +1,22 @@
 #include "enemy.hpp"
 
-Enemy::Enemy() :
-    running_(false),
-    position_({0.f, 0.f}),
-    dimensions_(20.f, 20.f),
-    velocity_(0.f, 0.f),
-    graphic_(dimensions_)
-{
-    graphic_.setOrigin(get_AABB().get_extents());
-    graphic_.setFillColor(sf::Color::Green);
-}
-
 void
-Enemy::update()
+Enemy::update(sf::Time elapsed)
 {
-    if (running_) {
-        move(velocity_);
+    if (is_dead()) {
+        return;
     }
+
+    float dt = elapsed.asSeconds();
+    move(get_velocity() * dt);
 }
 
-AABB
-Enemy::get_AABB()
-{
-    return AABB(position_, dimensions_);
-}
-
-void
-Enemy::set_position(sf::Vector2f position)
-{
-    position_ = position;
-}
-
-void
-Enemy::set_move_velocity(sf::Vector2f velocity)
-{
-    velocity_ = velocity;
-}
-
-void
-Enemy::move(sf::Vector2f distance)
-{
-    position_ += velocity_;
-}
-
-void
-Enemy::start()
-{
-    running_ = true;
-}
-
-void
-Enemy::stop()
-{
-    running_ = false;
-}
-
-bool
-Enemy:: is_running()
-{
-    return running_;
-}
-
-sf::RectangleShape
+const sf::Drawable&
 Enemy::render()
 {
-    graphic_.setPosition(position_);
+    graphic_.setSize(get_dimensions());
+    graphic_.setOrigin(get_extents());
+    graphic_.setPosition(get_position());
+    graphic_.setFillColor(sf::Color::Green);
     return graphic_;
 }

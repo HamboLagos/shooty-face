@@ -1,50 +1,18 @@
 #include "projectile.hpp"
 
-sf::Vector2f
-Projectile::get_position() const
-{
-    return position_;
-}
-
 void
-Projectile::set_position(sf::Vector2f position)
+Projectile::update(sf::Time elapsed)
 {
-    position_ = position;
+    float dt = elapsed.asSeconds();
+    move(get_velocity() * dt);
 }
 
-sf::Vector2f
-Projectile::get_velocity() const
-{
-    return velocity_;
-}
-
-void
-Projectile::set_velocity(sf::Vector2f velocity)
-{
-    velocity_ = velocity;
-}
-
-void
-Projectile::update()
-{
-    position_ += velocity_;
-}
-
-void
-Projectile::kill()
-{
-    alive_ = false;
-}
-
-AABB
-Projectile::get_AABB()
-{
-    return AABB(position_, dimensions_);
-}
-
-const sf::CircleShape
+const sf::Drawable&
 Projectile::render()
 {
-    graphic_.setPosition(position_);
+    graphic_.setRadius(get_extents().x);
+    graphic_.setOrigin(get_extents());
+    graphic_.setPosition(get_position());
+    graphic_.setFillColor(sf::Color::Red);
     return graphic_;
 }

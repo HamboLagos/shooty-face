@@ -11,11 +11,19 @@ include_directories(${CMAKE_BINARY_DIR}/bin/gtest)
 
 # Add source files to the search path
 include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/utests)
 
 # Build the tests
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/utests)
 
 set(GTEST_LIBRARIES gmock gtest gmock_main)
+
+add_executable(
+    entity_tests
+    entity_tests.cpp
+)
+target_link_libraries(entity_tests ${GTEST_LIBRARIES} ${SFML_LIBRARIES})
+add_test(NAME entity_tests COMMAND entity_tests)
 
 add_executable(
     player_tests

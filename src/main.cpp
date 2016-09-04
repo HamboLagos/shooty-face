@@ -19,16 +19,18 @@ int main(int argc, char *argv[])
     static constexpr float WINDOW_HEIGHT = 500.f;
 
     sf::RenderWindow app(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Shooty Face");
-    app.setFramerateLimit(60);
+    app.setFramerateLimit(250);
 
     Player player;
+    player.set_dimensions({20.f, 20.f});
     player.set_position({400.f, 300.f});
-    player.set_move_velocity({10.f, 10.f});
-    player.set_projectile_speed(20.f);
+    player.set_velocity({250.f, 250.f});
+    player.set_projectile_speed(500.f);
 
     Enemy enemy;
+    enemy.set_dimensions({40.f, 40.f});
     enemy.set_position({50.f, 50.f});
-    enemy.set_move_velocity({2.f, 2.f});
+    enemy.set_velocity({2.f, 2.f});
 
     sf::Vector2f dimensions = {WINDOW_WIDTH, WINDOW_HEIGHT};
     AABB top_wall({0 + dimensions.x/2, 0 - dimensions.y/2}, dimensions);
@@ -36,7 +38,10 @@ int main(int argc, char *argv[])
     AABB bottom_wall(top_wall.get_origin() + sf::Vector2f(0.f, dimensions.y + WINDOW_HEIGHT), dimensions);
     AABB right_wall(left_wall.get_origin() + sf::Vector2f(dimensions.x + WINDOW_WIDTH, 0.f), dimensions);
 
+    sf::Clock clock;
     while (app.isOpen()) {
+
+        sf::Time elapsed = clock.restart();
 
         sf::Event event;
         while (app.pollEvent(event)) {
@@ -67,7 +72,6 @@ int main(int argc, char *argv[])
                 default:
                     break;
                 }
-
                 break;
 
             case sf::Event::KeyPressed:
@@ -88,11 +92,14 @@ int main(int argc, char *argv[])
                 default:
                     break;
                 }
-
                 break;
 
             case sf::Event::MouseButtonReleased:
-                player.shoot(sf::Mouse::getPosition(app));
+                {
+                    auto target = sf::Mouse::getPosition(app);
+                    player.shoot(sf::Vector2f(target));
+                    player.get_projectile()->set_dimensions({10.f, 10.f});
+                }
                 break;
 
             default:
@@ -100,58 +107,58 @@ int main(int argc, char *argv[])
             }
         }
 
-        player.update();
+        player.update(elapsed);
 
         Collision collision;
-        if (collision.test(player.get_AABB(), top_wall)) {
+        if (collision.test(player.get_box(), top_wall)) {
             player.move(collision.get_penetration());
         }
-        if (collision.test(player.get_AABB(), left_wall)) {
+        if (collision.test(player.get_box(), left_wall)) {
             player.move(collision.get_penetration());
         }
-        if (collision.test(player.get_AABB(), bottom_wall)) {
+        if (collision.test(player.get_box(), bottom_wall)) {
             player.move(collision.get_penetration());
         }
-        if (collision.test(player.get_AABB(), right_wall)) {
+        if (collision.test(player.get_box(), right_wall)) {
             player.move(collision.get_penetration());
         }
 
         auto* projectile = player.get_projectile();
         if (projectile != nullptr) {
-            if (collision.test(projectile->get_AABB(), top_wall) ||
-                collision.test(projectile->get_AABB(), bottom_wall)) {
+            if (collision.test(projectile->get_box(), top_wall) ||
+                collision.test(projectile->get_box(), bottom_wall)) {
                 auto velocity = projectile->get_velocity();
                 projectile->set_velocity({velocity.x, -velocity.y});
             }
-            if (collision.test(projectile->get_AABB(), left_wall) ||
-                collision.test(projectile->get_AABB(), right_wall)) {
+            if (collision.test(projectile->get_box(), left_wall) ||
+                collision.test(projectile->get_box(), right_wall)) {
                 auto velocity = projectile->get_velocity();
                 projectile->set_velocity({-velocity.x, velocity.y});
             }
         }
 
-        enemy.update();
+        enemy.update(elapsed);
         if (projectile != nullptr) {
-            if (collision.test(projectile->get_AABB(), enemy.get_AABB())) {
+            if (collision.test(projectile->get_box(), enemy.get_box())) {
                 projectile->kill();
-                if (enemy.is_running()) {
-                    enemy.stop();
+                if (enemy.is_alive()) {
+                    enemy.kill();
                 } else {
-                    enemy.set_move_velocity(projectile->get_velocity()/4.f);
-                    enemy.start();
+                    enemy.set_velocity(projectile->get_velocity()/4.f);
+                    enemy.animate();
                 }
             }
         }
 
-        if (collision.test(enemy.get_AABB(), top_wall) ||
-            collision.test(enemy.get_AABB(), bottom_wall)) {
-            auto velocity = enemy.get_move_velocity();
-            enemy.set_move_velocity({velocity.x, -velocity.y});
+        if (collision.test(enemy.get_box(), top_wall) ||
+            collision.test(enemy.get_box(), bottom_wall)) {
+            auto velocity = enemy.get_velocity();
+            enemy.set_velocity({velocity.x, -velocity.y});
         }
-        if (collision.test(enemy.get_AABB(), left_wall) ||
-            collision.test(enemy.get_AABB(), right_wall)) {
-            auto velocity = enemy.get_move_velocity();
-            enemy.set_move_velocity({-velocity.x, velocity.y});
+        if (collision.test(enemy.get_box(), left_wall) ||
+            collision.test(enemy.get_box(), right_wall)) {
+            auto velocity = enemy.get_velocity();
+            enemy.set_velocity({-velocity.x, velocity.y});
         }
 
         app.clear(sf::Color::White);

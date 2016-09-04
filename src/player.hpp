@@ -1,70 +1,64 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include <SFML/Graphics/RectangleShape.hpp>
 
+#include "entity.hpp"
 #include "projectile.hpp"
-#include "AABB.hpp"
 
-class Player
+class Player : public Entity
 {
+friend class TestablePlayer;
 public:
     enum class Direction
     {
-        UP,
-        LEFT,
+        RIGHT,
         DOWN,
-        RIGHT
+        LEFT,
+        UP
     };
 
     Player();
+    ~Player() override;
 
-    void update();
+    void update(sf::Time dt) override;
+    const sf::Drawable& render() override;
 
-    AABB get_AABB();
-
-    /** \brief Set the absolute position <x, y>. */
-    void set_position(sf::Vector2f position);
-
-    /** \brief Set the <x, y> velocity of the player when moving.
-     *
-     * X and Y velocities are independent of each other.*/
-    void set_move_velocity(sf::Vector2f velocity);
-
-    /** \brief Move the given distance <x, y>. */
-    void move(sf::Vector2f distance);
-
-    /** \brief Apply velocity change in the given direction.
+    /** \brief Apply velocity to the player in the given direction.
      *
      * Stop the movement with stop_move(). Movements in the opposite direction cancel each other
-     * out, while active.*/
+     * out, while active. Movements speeds do not stack when applied more than once. */
     void start_move(Direction direction);
 
-    /** \brief Stop movement in the given direction. */
+    /** \brief Stop movement in the given direction.
+     *
+     * Cancels the movement in the given direction. If the player was not already moving in the
+     * given direction, has no effect. */
     void stop_move(Direction direction);
 
-    /** \brief Poll the current position <x, y>. */
-    sf::Vector2f get_position() const;
+    /** \brief Fire a projectile directed at the given target.
+     *
+     * \param[in] target Direction to fire the projectile, in Window Coordinates. */
+    void shoot(sf::Vector2f target);
 
-    void shoot(sf::Vector2i target);
-
+    /// TODO hide this in a projectile interface
     void set_projectile_speed(float speed);
 
+    /// TODO hide this in a projectile interface
     Projectile* get_projectile() const;
 
-    /** \brief Get the renderable graphic for the player. */
-    const sf::RectangleShape& render();
-
 private:
-    sf::Vector2f position_;
-    sf::Vector2f dimensions_;
-    sf::Vector2f velocity_;
     sf::RectangleShape graphic_;
 
-    float projectile_speed_;
-    Projectile* projectile_;
+    float projectile_speed_; ///< TODO hide this in a projectile interface
+    Projectile* projectile_; ///< TODO hide this in a projectile interface
 
-    bool moving_up_;
-    bool moving_left_;
-    bool moving_down_;
-    bool moving_right_;
+    struct MovementDirections
+    {
+        bool up    = false;
+        bool left  = false;
+        bool down  = false;
+        bool right = false;
+
+        void set(bool is_moving, Direction direction);
+    } is_moving;
 };
