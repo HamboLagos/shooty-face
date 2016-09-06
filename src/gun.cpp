@@ -54,9 +54,21 @@ Gun::update(sf::Time elapsed)
     }
 }
 
-const sf::Drawable&
+std::vector<const sf::Drawable*>
 Gun::render()
 {
-    graphic_.setFillColor(sf::Color::Transparent);
-    return graphic_;
+    std::vector<const sf::Drawable*> renderings;
+    renderings.reserve(magazine_.size());
+
+    for(auto* projectile : magazine_) {
+        renderings.push_back(&projectile->render());
+    }
+
+    return renderings;
+}
+
+std::vector<Projectile*>
+Gun::get_elements() const
+{
+    return std::vector<Projectile*>(magazine_); // returning copy
 }

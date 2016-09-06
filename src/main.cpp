@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     Player player;
     player.set_dimensions({20.f, 20.f});
     player.set_position({400.f, 300.f});
-    player.set_velocity({250.f, 250.f});
+    player.set_velocity({100.f, 100.f});
     player.get_gun().set_ammunition(Ammunition::Bullet);
 
     Enemy enemy;
@@ -99,6 +99,9 @@ int main(int argc, char *argv[])
                 {
                     auto target = sf::Mouse::getPosition(app);
                     player.get_gun().fire(sf::Vector2f(target));
+
+                    std::cout << "Projectile Count: " <<
+                        player.get_gun().get_elements().size() << std::endl;
                 }
                 break;
 
@@ -108,6 +111,7 @@ int main(int argc, char *argv[])
         }
 
         player.update(elapsed);
+        enemy.update(elapsed);
 
         Collision collision;
         if (collision.test(player.get_box(), top_wall)) {
@@ -123,8 +127,7 @@ int main(int argc, char *argv[])
             player.move(collision.get_penetration());
         }
 
-        auto* projectile = player.get_gun().get_last_projectile();
-        if (projectile != nullptr) {
+        for(auto* projectile : player.get_gun().get_elements()) {
             if (collision.test(projectile->get_box(), top_wall) ||
                 collision.test(projectile->get_box(), bottom_wall)) {
                 auto velocity = projectile->get_velocity();
@@ -137,16 +140,22 @@ int main(int argc, char *argv[])
             }
         }
 
-        enemy.update(elapsed);
-        if (projectile != nullptr) {
+        for(auto* projectile : player.get_gun().get_elements()) {
             if (collision.test(projectile->get_box(), enemy.get_box())) {
                 projectile->kill();
-                if (enemy.is_alive()) {
-                    enemy.kill();
+                enemy.damage(10.f);
+
+                if (enemy.is_dead()) {
+                    enemy.damage(-100.f); // reset health
+                    enemy.set_velocity({0.f, 0.f});
+                    enemy.animate();
                 } else {
-                    enemy.set_velocity(projectile->get_velocity()/4.f);
+                    enemy.set_velocity(projectile->get_velocity()/2.f);
                     enemy.animate();
                 }
+
+                std::cout << "Projectile Count: " <<
+                    player.get_gun().get_elements().size()-1 << std::endl;
             }
         }
 
@@ -163,10 +172,10 @@ int main(int argc, char *argv[])
 
         app.clear(sf::Color::White);
         app.draw(player.render());
-        if (projectile != nullptr) {
-            app.draw(projectile->render());
-        }
         app.draw(enemy.render());
+        for(const auto* rendering : player.get_gun().render()) {
+            app.draw(*rendering);
+        }
         app.display();
     }
     return 0;

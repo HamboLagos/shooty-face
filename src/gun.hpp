@@ -2,9 +2,10 @@
 
 #include <SFML/Graphics/RectangleShape.hpp>
 
+#include "composite_entity.hpp"
 #include "bullet.hpp"
 
-class Gun : public Entity
+class Gun : public CompositeEntity<Projectile>
 {
 public:
     enum class Ammunition
@@ -12,7 +13,7 @@ public:
         Bullet
     };
 
-    static constexpr float BULLET_SPEED = 100.f;
+    static constexpr float BULLET_SPEED = 250.f;
 
     Gun(const Entity& the_operator) :
         operator_(the_operator)
@@ -27,15 +28,11 @@ public:
     /** \brief Fire a projectile of the set ammunition type at the given target. */
     void fire(sf::Vector2f target);
 
-    /** \brief Calls update on each of the currently animated bullets. */
     void update(sf::Time elapsed) override;
-
-    /** \brief For the moment, does nothing. */
-    const sf::Drawable& render() override;
+    std::vector<const sf::Drawable*> render() override;
+    std::vector<Projectile*> get_elements() const override;
 
 private:
-    sf::RectangleShape graphic_;
-
     const Entity& operator_;
 
     Ammunition ammunition_;
