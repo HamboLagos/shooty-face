@@ -3,19 +3,18 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 
 #include "entity.hpp"
+#include "healthy.hpp"
 
-class Enemy : public Entity
+class Enemy : public Entity, public Healthy
 {
 public:
-    Enemy();
-
-    void damage(float damage);
+    Enemy() = default;
 
     void update(sf::Time elapsed) override;
     const sf::Drawable& render() override;
 
+    void on_death() override;
+
 private:
     sf::RectangleShape graphic_;
-
-    float health_;
 };

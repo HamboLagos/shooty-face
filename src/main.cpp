@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
                 enemy.damage(10.f);
 
                 if (enemy.is_dead()) {
-                    enemy.damage(-100.f); // reset health
+                    enemy.heal(100.f); // reset health
                     enemy.set_velocity({0.f, 0.f});
                     enemy.animate();
                 } else {
