@@ -4,16 +4,8 @@
 
 Player::Player() :
     graphic_(),
-    projectile_speed_(0.f),
-    projectile_(nullptr)
+    gun_(*this)
 { }
-
-Player::~Player()
-{
-    if (projectile_ != nullptr) {
-        delete projectile_;
-    }
-}
 
 void
 Player::update(sf::Time elapsed)
@@ -36,14 +28,7 @@ Player::update(sf::Time elapsed)
 
     move({dx, dy});
 
-    if (projectile_ != nullptr) {
-        if (projectile_->is_alive()) {
-            projectile_->update(elapsed);
-        } else {
-            delete projectile_;
-            projectile_ = nullptr;
-        }
-    }
+    gun_.update(elapsed);
 }
 
 const sf::Drawable&
@@ -66,32 +51,6 @@ void
 Player::stop_move(Direction direction)
 {
     is_moving.set(false, direction);
-}
-
-void Player::shoot(sf::Vector2f target)
-{
-    if (projectile_ != nullptr) {
-        delete projectile_;
-    }
-
-    sf::Vector2f vector = target - get_position();
-    float vector_length = sqrt(vector.x*vector.x + vector.y*vector.y);
-    sf::Vector2f unit_vector = vector / vector_length;
-    sf::Vector2f projectile_velocity = projectile_speed_ * unit_vector;
-
-    projectile_ = new Projectile();
-    projectile_->set_position(get_position());
-    projectile_->set_velocity(projectile_velocity);
-}
-
-void Player::set_projectile_speed(float speed)
-{
-    projectile_speed_ = speed;
-}
-
-Projectile* Player::get_projectile() const
-{
-    return projectile_;
 }
 
 void

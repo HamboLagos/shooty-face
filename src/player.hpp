@@ -3,7 +3,7 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 
 #include "entity.hpp"
-#include "projectile.hpp"
+#include "gun.hpp"
 
 class Player : public Entity
 {
@@ -18,7 +18,6 @@ public:
     };
 
     Player();
-    ~Player() override;
 
     void update(sf::Time dt) override;
     const sf::Drawable& render() override;
@@ -35,22 +34,12 @@ public:
      * given direction, has no effect. */
     void stop_move(Direction direction);
 
-    /** \brief Fire a projectile directed at the given target.
-     *
-     * \param[in] target Direction to fire the projectile, in Window Coordinates. */
-    void shoot(sf::Vector2f target);
-
-    /// TODO hide this in a projectile interface
-    void set_projectile_speed(float speed);
-
-    /// TODO hide this in a projectile interface
-    Projectile* get_projectile() const;
+    Gun& get_gun() { return gun_; }
 
 private:
     sf::RectangleShape graphic_;
 
-    float projectile_speed_; ///< TODO hide this in a projectile interface
-    Projectile* projectile_; ///< TODO hide this in a projectile interface
+    Gun gun_;
 
     struct MovementDirections
     {

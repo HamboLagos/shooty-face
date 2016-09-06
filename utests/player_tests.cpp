@@ -103,28 +103,3 @@ TEST_F(Render, InitializesGraphicWithCorrectPositionAndSize)
     EXPECT_EQ(get_graphic().getPosition(), sf::Vector2f(110.f, 220.f));
     EXPECT_EQ(get_graphic().getSize(), sf::Vector2f(40.f, 80.f));
 }
-
-class Shoot : public TestablePlayer
-{
-protected:
-    static const sf::Vector2f position_;
-    static const sf::Vector2f target_;
-    static const float projectile_speed_;
-};
-const sf::Vector2f Shoot::position_  = {10.f, 20.f};
-const sf::Vector2f Shoot::target_    = {13.f, 24.f};
-const float Shoot::projectile_speed_ = 5.f;
-
-TEST_F(Shoot, FiresAProjectileAtTheTarget)
-{
-    sut.set_position(position_);
-    sut.set_projectile_speed(projectile_speed_);
-    sut.shoot(target_);
-    auto& projectile = *sut.get_projectile();
-
-    EXPECT_EQ(projectile.get_position(), sf::Vector2f(10.f, 20.f));
-    EXPECT_EQ(projectile.get_velocity(), sf::Vector2f(3.f, 4.f));
-
-    projectile.update(sf::seconds(0.5f));
-    EXPECT_EQ(projectile.get_position(), sf::Vector2f(11.5f, 22.f));
-}

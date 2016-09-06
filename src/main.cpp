@@ -7,6 +7,7 @@
 #include "enemy.hpp"
 
 using namespace std;
+using Ammunition = Gun::Ammunition;
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
     player.set_dimensions({20.f, 20.f});
     player.set_position({400.f, 300.f});
     player.set_velocity({250.f, 250.f});
-    player.set_projectile_speed(500.f);
+    player.get_gun().set_ammunition(Ammunition::Bullet);
 
     Enemy enemy;
     enemy.set_dimensions({40.f, 40.f});
@@ -97,8 +98,7 @@ int main(int argc, char *argv[])
             case sf::Event::MouseButtonReleased:
                 {
                     auto target = sf::Mouse::getPosition(app);
-                    player.shoot(sf::Vector2f(target));
-                    player.get_projectile()->set_dimensions({10.f, 10.f});
+                    player.get_gun().fire(sf::Vector2f(target));
                 }
                 break;
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
             player.move(collision.get_penetration());
         }
 
-        auto* projectile = player.get_projectile();
+        auto* projectile = player.get_gun().get_last_projectile();
         if (projectile != nullptr) {
             if (collision.test(projectile->get_box(), top_wall) ||
                 collision.test(projectile->get_box(), bottom_wall)) {

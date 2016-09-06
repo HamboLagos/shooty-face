@@ -40,14 +40,14 @@ public:
 
     inline void animate() { is_alive_ = true; }
     inline void kill() { is_alive_ = false; }
-    inline bool is_alive() { return is_alive_; }
-    inline bool is_dead() { return !is_alive_; }
+    inline bool is_alive() const { return is_alive_; }
+    inline bool is_dead() const { return !is_alive_; }
 
     /** \brief Get the AABB for this Entity.
      *
      * The AABB is invalidated by a change to this Entity's dimensions or position. To ensure
      * memory-safety, the AABB is recalculated on each call. */
-    inline AABB get_box() const { return AABB(get_position(), get_dimensions()); }
+    inline AABB get_box() const { return AABB(position_, dimensions_); }
 
     /** \brief Update this entity.
      *
@@ -60,6 +60,20 @@ public:
      *
      * The Entity class does not allocate storage space for graphics, since it varies by client. */
     virtual const sf::Drawable& render() = 0;
+
+    virtual inline bool operator==(const Entity& other) const
+    {
+        return
+            dimensions_ == other.dimensions_ &&
+            position_   == other.position_ &&
+            velocity_   == other.velocity_ &&
+            is_alive_   == other.is_alive_;
+    }
+
+    virtual inline bool operator!=(const Entity& other) const
+    {
+        return !(*this == other);
+    }
 
 private:
     sf::Vector2f dimensions_; ///< <width, height> of this entity, defines AABB

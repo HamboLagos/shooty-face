@@ -26,10 +26,28 @@ target_link_libraries(entity_tests ${GTEST_LIBRARIES} ${SFML_LIBRARIES})
 add_test(NAME entity_tests COMMAND entity_tests)
 
 add_executable(
+    bullet_tests
+    bullet_tests.cpp
+    ${CMAKE_SOURCE_DIR}/src/bullet.cpp
+)
+target_link_libraries(bullet_tests ${GTEST_LIBRARIES} ${SFML_LIBRARIES})
+add_test(NAME bullet_tests COMMAND bullet_tests)
+
+add_executable(
+    gun_tests
+    gun_tests.cpp
+    ${CMAKE_SOURCE_DIR}/src/gun.cpp
+    ${CMAKE_SOURCE_DIR}/src/bullet.cpp
+)
+target_link_libraries(gun_tests ${GTEST_LIBRARIES} ${SFML_LIBRARIES})
+add_test(NAME gun_tests COMMAND gun_tests)
+
+add_executable(
     player_tests
     player_tests.cpp
     ${CMAKE_SOURCE_DIR}/src/player.cpp
-    ${CMAKE_SOURCE_DIR}/src/projectile.cpp
+    ${CMAKE_SOURCE_DIR}/src/gun.cpp
+    ${CMAKE_SOURCE_DIR}/src/bullet.cpp
 )
 target_link_libraries(player_tests ${GTEST_LIBRARIES} ${SFML_LIBRARIES})
 add_test(NAME player_tests COMMAND player_tests)
