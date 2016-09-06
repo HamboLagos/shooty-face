@@ -1,11 +1,9 @@
-set(TEST_NAME "player_tests")
+set(TEST_NAME "health_bar_tests")
 
 add_executable(
     ${TEST_NAME}
     ${TEST_NAME}.cpp
-    ${CMAKE_SOURCE_DIR}/src/player.cpp
-    ${CMAKE_SOURCE_DIR}/src/gun.cpp
-    ${CMAKE_SOURCE_DIR}/src/bullet.cpp
+    ${CMAKE_SOURCE_DIR}/src/health_bar.cpp
     ${CMAKE_SOURCE_DIR}/src/utils.cpp
 )
 target_link_libraries(${TEST_NAME} ${GTEST_LIBRARIES} ${SFML_LIBRARIES})

@@ -1,10 +1,12 @@
-#include <config.h>
 #include <iostream>
+
+#include <config.h>
 #include <SFML/Graphics.hpp>
 
-#include "player.hpp"
 #include "collision.hpp"
 #include "enemy.hpp"
+#include "health_bar.hpp"
+#include "player.hpp"
 
 using namespace std;
 using Ammunition = Gun::Ammunition;
@@ -32,6 +34,9 @@ int main(int argc, char *argv[])
     enemy.set_dimensions({40.f, 40.f});
     enemy.set_position({50.f, 50.f});
     enemy.set_velocity({2.f, 2.f});
+    enemy.set_health(50.f);
+
+    HealthBar health_bar({60.f, 8.f});
 
     sf::Vector2f dimensions = {WINDOW_WIDTH, WINDOW_HEIGHT};
     AABB top_wall({0 + dimensions.x/2, 0 - dimensions.y/2}, dimensions);
@@ -145,19 +150,16 @@ int main(int argc, char *argv[])
                 projectile->kill();
                 enemy.damage(10.f);
 
-                if (enemy.is_dead()) {
-                    enemy.heal(100.f); // reset health
-                    enemy.set_velocity({0.f, 0.f});
-                    enemy.animate();
-                } else {
+                if (enemy.is_alive()) {
                     enemy.set_velocity(projectile->get_velocity()/2.f);
-                    enemy.animate();
                 }
 
                 std::cout << "Projectile Count: " <<
                     player.get_gun().get_elements().size()-1 << std::endl;
             }
         }
+
+        health_bar.set_filled(enemy.get_health()/100.f);
 
         if (collision.test(enemy.get_box(), top_wall) ||
             collision.test(enemy.get_box(), bottom_wall)) {
@@ -174,6 +176,10 @@ int main(int argc, char *argv[])
         app.draw(player.render());
         app.draw(enemy.render());
         for(const auto* rendering : player.get_gun().render()) {
+            app.draw(*rendering);
+        }
+        sf::Vector2f offset = {0.f, -(enemy.get_extents().y + 10.f)};
+        for(const auto* rendering : health_bar.render(enemy.get_position() + offset)) {
             app.draw(*rendering);
         }
         app.display();

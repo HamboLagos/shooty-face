@@ -1,4 +1,5 @@
 #include "enemy.hpp"
+#include "utils.hpp"
 
 void
 Enemy::update(sf::Time elapsed)
@@ -16,16 +17,24 @@ Enemy::render()
 {
     graphic_.setSize(get_dimensions());
     graphic_.setOrigin(get_extents());
-    graphic_.setPosition(get_position());
+    graphic_.setPosition(pixelate(get_position()));
     graphic_.setFillColor(sf::Color::Green);
 
-    graphic_.setOutlineColor(sf::Color::Red);
-    graphic_.setOutlineThickness((get_health()/100.f - 1) * get_dimensions().x/2.f);
     return graphic_;
 }
 
 void
 Enemy::on_death()
 {
+    static bool trigger_respawn = false;
+
     kill();
+
+    if (!trigger_respawn) {
+        trigger_respawn = true;
+    } else {
+        trigger_respawn = false;
+        set_health(100.f);
+        animate();
+    }
 }
