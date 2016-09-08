@@ -1,7 +1,11 @@
 #include <gtest.h>
 #include <gmock.h>
 
-#include "stub_entity.hpp"
+#include "entity.hpp"
+
+class StubEntity : public Entity {
+    void update(sf::Time elapsed) override { return; }
+};
 
 using namespace testing;
 
@@ -88,7 +92,11 @@ TEST_F(Aliveness, AnimatingAndKiling)
     EXPECT_FALSE(sut.is_alive());
     EXPECT_TRUE(sut.is_dead());
 
-    sut.animate();
+    sut.set_alive(true);
     EXPECT_TRUE(sut.is_alive());
     EXPECT_FALSE(sut.is_dead());
+
+    sut.set_alive(false);
+    EXPECT_FALSE(sut.is_alive());
+    EXPECT_TRUE(sut.is_dead());
 }

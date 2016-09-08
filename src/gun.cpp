@@ -1,74 +1,44 @@
 #include "gun.hpp"
 #include "bullet.hpp"
 
-using Ammunition = Gun::Ammunition;
-
-void
-Gun::set_ammunition(Ammunition ammo)
+Gun::Gun(const Entity& the_operator) :
+    operator_(the_operator)
 {
-    ammunition_ = ammo;
-}
-
-Ammunition
-Gun::get_ammunition() const
-{
-    return ammunition_;
-}
-
-Projectile*
-Gun::get_last_projectile() const
-{
-    if (magazine_.empty()) {
-        return nullptr;
-    }
-
-    return magazine_.back();
+    set_solid(false);
 }
 
 void
 Gun::fire(sf::Vector2f target)
 {
-    switch (ammunition_) {
-
-    case Ammunition::Bullet: {
-            Bullet* bullet = new Bullet(operator_.get_position(), target, BULLET_SPEED) ;
-            bullet->set_dimensions({10.f, 10.f});
-            bullet->fire();
-            magazine_.push_back(bullet);
-        } break;
-
-    default:
-        break;
-    }
+    auto projectile = ammunition_->create_projectile();
+    projectile->set_position(operator_.get_position());
+    projectile->set_target(target);
+    projectile->fire();
+    magazine_.push_back(std::unique_ptr<Projectile>(projectile));
 }
 
 void
 Gun::update(sf::Time elapsed)
 {
-    auto remove_start = std::remove_if(magazine_.begin(), magazine_.end(),
-                                       [](const auto* projectile){ return projectile->is_dead(); });
-    magazine_.erase(remove_start, magazine_.end());
+    // remove all the dead projectiles
+    magazine_.erase(
+        std::remove_if(magazine_.begin(), magazine_.end(),
+                       [](const auto& projectile){ return projectile->is_dead(); }),
+        magazine_.end());
 
-    for(auto* projectile : magazine_) {
+    // update the remaining live projectiles
+    for(auto& projectile : magazine_) {
         projectile->update(elapsed);
     }
 }
 
-std::vector<const sf::Drawable*>
+void
 Gun::render()
 {
-    std::vector<const sf::Drawable*> renderings;
-    renderings.reserve(magazine_.size());
+    clear_renderings();
 
-    for(auto* projectile : magazine_) {
-        renderings.push_back(&projectile->render());
+    for(auto& projectile : magazine_) {
+        projectile->render();
+        add_renderings(projectile->get_renderings());
     }
-
-    return renderings;
-}
-
-std::vector<Projectile*>
-Gun::get_elements() const
-{
-    return std::vector<Projectile*>(magazine_); // returning copy
 }

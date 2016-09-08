@@ -3,6 +3,7 @@ set(TEST_NAME "health_bar_tests")
 add_executable(
     ${TEST_NAME}
     ${TEST_NAME}.cpp
+    ${CMAKE_SOURCE_DIR}/src/entity.cpp
     ${CMAKE_SOURCE_DIR}/src/health_bar.cpp
     ${CMAKE_SOURCE_DIR}/src/utils.cpp
 )

@@ -5,13 +5,15 @@
 #include "entity.hpp"
 #include "healthy.hpp"
 
-class Enemy : public Entity, public Healthy
+/** \brief Enemies are the ilk of the shooty-face universe, pursued with extreme prejudice. */
+class Enemy : public GraphicalEntity, public Healthy
 {
 public:
     Enemy() = default;
+    virtual ~Enemy() = default;
 
     void update(sf::Time elapsed) override;
-    const sf::Drawable& render() override;
+    void render() override;
 
     void on_death() override;
 

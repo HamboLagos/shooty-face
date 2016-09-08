@@ -91,7 +91,8 @@ TEST_F(Render, InitializesGraphicWithCorrectPositionAndSize)
 {
     sut.set_position(position_);
     sut.set_dimensions(dimensions_);
-    auto& graphic = sut.render();
+    sut.render();
+    const auto* graphic = sut.get_renderings()[0];
 
     EXPECT_EQ(get_graphic().getPosition(), sf::Vector2f(100.f, 200.f));
     EXPECT_EQ(get_graphic().getSize(), sf::Vector2f(10.f, 20.f));

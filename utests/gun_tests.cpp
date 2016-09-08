@@ -1,20 +1,39 @@
 #include <gtest.h>
 #include <gmock.h>
 
-#include "stub_entity.hpp"
 #include "gun.hpp"
+#include "bullet.hpp"
+
+class MockEntity : public Entity
+{
+public:
+    MOCK_METHOD1(update, void(sf::Time));
+};
+
+class MockAmmunition : public Ammunition
+{
+public:
+    MOCK_METHOD0(create_projectile, Projectile*());
+};
+
+class MockProjectile : public Projectile
+{
+public:
+    MOCK_METHOD0(fire, void());
+    MOCK_METHOD1(update, void(sf::Time));
+    MOCK_METHOD0(render, void());
+};
 
 using namespace testing;
-using Ammunition = Gun::Ammunition;
 
 class TestableGun : public Test
 {
 protected:
-    StubEntity gun_operator_;
+    MockEntity operator_;
     Gun sut;
 
     TestableGun() :
-        sut(gun_operator_)
+        sut(operator_)
     { }
 };
 
@@ -23,28 +42,38 @@ class FiringBullets : public TestableGun
 protected:
     static const sf::Vector2f initial_position_;
     static const sf::Vector2f target_;
-    static const sf::Vector2f dimensions_;
 
-    FiringBullets()
+    MockAmmunition* ammunition_;
+    MockProjectile* projectile_;
+
+    FiringBullets() :
+        ammunition_(new MockAmmunition),
+        projectile_(new MockProjectile)
     {
-        gun_operator_.set_position(initial_position_);
+        operator_.set_position(initial_position_);
     }
 };
 const sf::Vector2f FiringBullets::initial_position_ = {10.f, 20.f};
 const sf::Vector2f FiringBullets::target_           = {20.f, 40.f};
-const sf::Vector2f FiringBullets::dimensions_       = {10.f, 10.f};
 
 TEST_F(FiringBullets, ProxyToBulletProjectile)
 {
-    sut.set_ammunition(Ammunition::Bullet);
-    EXPECT_EQ(Ammunition::Bullet, sut.get_ammunition());
+    sut.set_ammunition(std::unique_ptr<MockAmmunition>(ammunition_));
+    ammunition_ = static_cast<MockAmmunition*>(sut.get_ammunition());
+
+    EXPECT_CALL(*ammunition_, create_projectile())
+        .WillOnce(Return(projectile_));
+
+    EXPECT_CALL(*projectile_, fire())
+        .Times(Exactly(1));
 
     sut.fire(target_);
-    auto& actual = static_cast<Bullet&>(*sut.get_last_projectile());
 
-    Bullet expected(initial_position_, target_, Gun::BULLET_SPEED);
-    expected.set_dimensions(dimensions_);
-    expected.fire();
+    EXPECT_EQ(initial_position_, projectile_->get_position());
+    EXPECT_EQ(target_, projectile_->get_target());
+    EXPECT_TRUE(projectile_->is_alive());
 
-    EXPECT_EQ(expected, actual);
+    // Google mock does not play nice with smart pointers. Oh well.
+    Mock::VerifyAndClearExpectations(ammunition_);
+    Mock::AllowLeak(ammunition_);
 }

@@ -7,9 +7,15 @@
 #include "enemy.hpp"
 #include "health_bar.hpp"
 #include "player.hpp"
+#include "bullet.hpp"
 
 using namespace std;
-using Ammunition = Gun::Ammunition;
+using Renderings = Graphical::Renderings;
+
+void add_renderings(Renderings& to, const Renderings& from)
+{
+    to.insert(to.end(), from.begin(), from.end());
+}
 
 int main(int argc, char *argv[])
 {
@@ -28,15 +34,13 @@ int main(int argc, char *argv[])
     player.set_dimensions({20.f, 20.f});
     player.set_position({400.f, 300.f});
     player.set_velocity({100.f, 100.f});
-    player.get_gun().set_ammunition(Ammunition::Bullet);
+    player.get_gun().set_ammunition(std::make_unique<Bullet>());
 
     Enemy enemy;
     enemy.set_dimensions({40.f, 40.f});
     enemy.set_position({50.f, 50.f});
     enemy.set_velocity({2.f, 2.f});
     enemy.set_health(50.f);
-
-    HealthBar health_bar({60.f, 8.f});
 
     sf::Vector2f dimensions = {WINDOW_WIDTH, WINDOW_HEIGHT};
     AABB top_wall({0 + dimensions.x/2, 0 - dimensions.y/2}, dimensions);
@@ -104,15 +108,21 @@ int main(int argc, char *argv[])
                 {
                     auto target = sf::Mouse::getPosition(app);
                     player.get_gun().fire(sf::Vector2f(target));
-
-                    std::cout << "Projectile Count: " <<
-                        player.get_gun().get_elements().size() << std::endl;
                 }
                 break;
 
             default:
                 break;
             }
+        }
+
+        static int last_projectile_count = 0;
+        int projectile_count = player.get_gun().get_magazine().size();
+        if (last_projectile_count != projectile_count) {
+            last_projectile_count = projectile_count;
+
+            std::cout << "Projectile Count: " <<
+                projectile_count << std::endl;
         }
 
         player.update(elapsed);
@@ -132,54 +142,50 @@ int main(int argc, char *argv[])
             player.move(collision.get_penetration());
         }
 
-        for(auto* projectile : player.get_gun().get_elements()) {
-            if (collision.test(projectile->get_box(), top_wall) ||
-                collision.test(projectile->get_box(), bottom_wall)) {
-                auto velocity = projectile->get_velocity();
-                projectile->set_velocity({velocity.x, -velocity.y});
-            }
-            if (collision.test(projectile->get_box(), left_wall) ||
-                collision.test(projectile->get_box(), right_wall)) {
-                auto velocity = projectile->get_velocity();
-                projectile->set_velocity({-velocity.x, velocity.y});
-            }
+        if (collision.test(enemy.get_box(), top_wall) ||
+            collision.test(enemy.get_box(), bottom_wall)) {
+            enemy.move(collision.get_penetration());
+            auto velocity = enemy.get_velocity();
+            enemy.set_velocity({velocity.x, -velocity.y});
+        }
+        if (collision.test(enemy.get_box(), left_wall) ||
+            collision.test(enemy.get_box(), right_wall)) {
+            enemy.move(collision.get_penetration());
+            auto velocity = enemy.get_velocity();
+            enemy.set_velocity({-velocity.x, velocity.y});
         }
 
-        for(auto* projectile : player.get_gun().get_elements()) {
-            if (collision.test(projectile->get_box(), enemy.get_box())) {
+        for(auto& projectile : player.get_gun().get_magazine()) {
+            auto projectile_box = projectile->get_box();
+            if (collision.test(projectile_box, top_wall)    ||
+                collision.test(projectile_box, left_wall)   ||
+                collision.test(projectile_box, bottom_wall) ||
+                collision.test(projectile_box, right_wall)) {
+
                 projectile->kill();
+            }
+
+            if (collision.test(projectile_box, enemy.get_box())) {
                 enemy.damage(10.f);
 
                 if (enemy.is_alive()) {
                     enemy.set_velocity(projectile->get_velocity()/2.f);
                 }
 
-                std::cout << "Projectile Count: " <<
-                    player.get_gun().get_elements().size()-1 << std::endl;
+                projectile->kill();
             }
         }
 
-        health_bar.set_filled(enemy.get_health()/100.f);
+        Graphical::Renderings all_renderings;
 
-        if (collision.test(enemy.get_box(), top_wall) ||
-            collision.test(enemy.get_box(), bottom_wall)) {
-            auto velocity = enemy.get_velocity();
-            enemy.set_velocity({velocity.x, -velocity.y});
-        }
-        if (collision.test(enemy.get_box(), left_wall) ||
-            collision.test(enemy.get_box(), right_wall)) {
-            auto velocity = enemy.get_velocity();
-            enemy.set_velocity({-velocity.x, velocity.y});
-        }
+        player.render();
+        add_renderings(all_renderings, player.get_renderings());
+
+        enemy.render();
+        add_renderings(all_renderings, enemy.get_renderings());
 
         app.clear(sf::Color::White);
-        app.draw(player.render());
-        app.draw(enemy.render());
-        for(const auto* rendering : player.get_gun().render()) {
-            app.draw(*rendering);
-        }
-        sf::Vector2f offset = {0.f, -(enemy.get_extents().y + 10.f)};
-        for(const auto* rendering : health_bar.render(enemy.get_position() + offset)) {
+        for(const auto* rendering : all_renderings) {
             app.draw(*rendering);
         }
         app.display();

@@ -1,40 +1,34 @@
 #pragma once
 
-#include <SFML/Graphics/RectangleShape.hpp>
+#include <memory>
 
-#include "composite_entity.hpp"
-#include "bullet.hpp"
+#include "entity.hpp"
+#include "projectile.hpp"
 
-class Gun : public CompositeEntity<Projectile>
+/** \brief Gun is a collection of Projectiles which belongs to an operator. */
+class Gun : public GraphicalEntity
 {
 public:
-    enum class Ammunition
-    {
-        Bullet
-    };
+    using Magazine = std::vector<std::unique_ptr<Projectile>>;
 
-    static constexpr float BULLET_SPEED = 250.f;
+    Gun(const Entity& the_operator);
+    virtual ~Gun() = default;
 
-    Gun(const Entity& the_operator) :
-        operator_(the_operator)
-    { }
+    inline void set_ammunition(std::unique_ptr<Ammunition> ammo)
+    { ammunition_ = std::move(ammo); }
+    inline Ammunition* get_ammunition() const { return ammunition_.get(); }
 
-    /** \brief Set the ammunition type for this gun. */
-    void set_ammunition(Ammunition type);
-    Ammunition get_ammunition() const;
-
-    Projectile* get_last_projectile() const;
+    inline Magazine& get_magazine() { return magazine_; }
 
     /** \brief Fire a projectile of the set ammunition type at the given target. */
     void fire(sf::Vector2f target);
 
     void update(sf::Time elapsed) override;
-    std::vector<const sf::Drawable*> render() override;
-    std::vector<Projectile*> get_elements() const override;
+    void render() override;
 
 private:
-    const Entity& operator_;
+    const Entity& operator_; ///< The entity operating this gun
 
-    Ammunition ammunition_;
-    std::vector<Projectile*> magazine_;
+    std::unique_ptr<Ammunition> ammunition_; ///< Ammunition type used for next fire()
+    Magazine magazine_; ///< The projectiles this gun tracks (fired and unfired)
 };

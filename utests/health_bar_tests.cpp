@@ -15,11 +15,14 @@ protected:
     HealthBar sut;
 
     TestableHealthBar() :
-        sut(dimensions_)
-    { }
+        sut()
+    {
+        sut.set_dimensions(dimensions_);
+        sut.set_position(position_);
+    }
 };
 const sf::Vector2f TestableHealthBar::dimensions_ = {100.f, 10.f};
-const sf::Vector2f TestableHealthBar::position_   = {60.f, 6.f}; ///< min corner at <0, 0>
+const sf::Vector2f TestableHealthBar::position_   = {60.f, 6.f}; ///< min corner at <10.f, 1.f>
 
 class PercentFilled : public TestableHealthBar { };
 
@@ -49,7 +52,8 @@ protected:
 TEST_F(Render, ZeroHealth_OutlineOnly)
 {
     sut.set_filled(zero_health_);
-    auto renderings = sut.render(position_);
+    sut.render();
+    auto renderings = sut.get_renderings();
     ASSERT_EQ(2, renderings.size());
 
     const auto& outline = *static_cast<const sf::RectangleShape*>(renderings[0]);
@@ -72,7 +76,8 @@ TEST_F(Render, ZeroHealth_OutlineOnly)
 TEST_F(Render, FullHealth_CompletelyFilled)
 {
     sut.set_filled(full_health_);
-    auto renderings = sut.render(position_);
+    sut.render();
+    auto renderings = sut.get_renderings();
     ASSERT_EQ(2, renderings.size());
 
     const auto& outline = *static_cast<const sf::RectangleShape*>(renderings[0]);
@@ -95,7 +100,8 @@ TEST_F(Render, FullHealth_CompletelyFilled)
 TEST_F(Render, HalfHealth_PartiallyFilledPartiallyOutline)
 {
     sut.set_filled(half_health_);
-    auto renderings = sut.render(position_);
+    sut.render();
+    auto renderings = sut.get_renderings();
     ASSERT_EQ(2, renderings.size());
 
     const auto& outline = *static_cast<const sf::RectangleShape*>(renderings[0]);

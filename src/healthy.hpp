@@ -1,5 +1,7 @@
 #pragma once
 
+#include "health_bar.hpp"
+
 class Healthy
 {
 public:
@@ -9,16 +11,21 @@ public:
 
     /** \brief Set health to an absolute value.
      *
-     * Does not trigger any callbacks.
+     * Does not trigger any callbacks. Health is coerced to nearest value in range
+     * [0.f, base_health].
      *
      * \param[in] health New health value. */
-    inline void set_health(float health) { health_ = health; }
+    void set_health(float health);
     inline float get_health() const { return health_; };
+
+    Graphical::Renderings render(sf::Vector2f position, float y_off);
 
     /** \brief Reduces health by the given amount.
      *
      * Always triggers Healthy::on_damage(), and may trigger Healthy::on_death() if resulting health
      * is <= 0.
+     *
+     * Before callbacks, health is coerced to nearest value in range [0.f, base_health].
      *
      * \param[in] damage Health reduction amount. */
     void damage(float damage);
@@ -26,6 +33,8 @@ public:
     /** \brief Increases health by the given amount.
      *
      * Always triggers Healthy::on_heal().
+     *
+     * Before callbacks, health is coerced to nearest value in range [0.f, base_health].
      *
      * \param[in] heal Health increase amount. */
     void heal(float heal);
@@ -54,5 +63,8 @@ public:
     virtual void on_death() { }
 
 private:
+    float base_health_;
     float health_;
+
+    HealthBar health_bar_;
 };

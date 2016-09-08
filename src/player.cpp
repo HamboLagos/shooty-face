@@ -4,7 +4,6 @@
 #include <cmath>
 
 Player::Player() :
-    graphic_(),
     gun_(*this)
 { }
 
@@ -32,14 +31,19 @@ Player::update(sf::Time elapsed)
     gun_.update(elapsed);
 }
 
-const sf::Drawable&
+void
 Player::render()
 {
+    clear_renderings();
+
     graphic_.setSize(get_dimensions());
     graphic_.setOrigin(get_extents());
     graphic_.setPosition(pixelate(get_position()));
-    graphic_.setFillColor(sf::Color::Black);
-    return graphic_;
+    graphic_.setFillColor(sf::Color::Blue);
+    add_rendering(&graphic_);
+
+    gun_.render();
+    add_renderings(gun_.get_renderings());
 }
 
 void

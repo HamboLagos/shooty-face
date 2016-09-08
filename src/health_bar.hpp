@@ -2,10 +2,16 @@
 
 #include <SFML/Graphics/RectangleShape.hpp>
 
-class HealthBar
+#include "entity.hpp"
+
+/** \brief Health Bar is a graphical representation of the health of a given entity. */
+class HealthBar : public GraphicalEntity
 {
+static constexpr float OUTLINE_THICKNESS = -0.2f;
+
 public:
-    HealthBar(sf::Vector2f dimensions);
+    HealthBar();
+    virtual ~HealthBar() = default;
 
     /** \brief Set the filled percentage of this health bar.
      *
@@ -13,22 +19,16 @@ public:
      *
      * \param[in] percent_filled Percentage of bar filled. */
     void set_filled(float percent_filled);
+    inline float get_filled() const { return percent_filled_; } ///< Test Method
 
-    /// Test Method
-    inline float get_filled() const { return percent_filled_; }
+    /** \brief Update has no meaning in this context. */
+    void update(sf::Time elapsed) override { return; }
 
-    /** \brief Render the health bar at the given position.
-     *
-     * \param[in] position Geometrically centered position for the health bar.
-     * \return Collection of renderings, must be drawn in order. */
-    std::vector<const sf::Drawable*> render(sf::Vector2f position);
+    void render() override;
 
 private:
     float percent_filled_;
 
-    sf::Vector2f dimensions_;
     sf::RectangleShape outline_;
     sf::RectangleShape filled_;
-
-    static constexpr float outline_thickness_ = -0.2f;
 };

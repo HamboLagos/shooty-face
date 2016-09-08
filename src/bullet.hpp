@@ -4,29 +4,35 @@
 
 #include "projectile.hpp"
 
-class Bullet : public Projectile
+/** \brief Bullet is a Projectile which fires in a straight line. */
+class Bullet : public Ammunition, public Projectile
 {
 friend class TestableBullet;
+
+static constexpr float BULLET_SPEED = 250.f;
+
 public:
-    /** \brief Create a new bullet ready to be fired.
+    /** \brief Construct a Bullet.
      *
-     * Bullets are fired in a linear trajectory, beginning at its initial position, and traversing
-     * along the trajectory vector which passes through its target.
-     *
-     * \param[in] initial_position The starting position of this Bullet.
-     * \param[in] target Where to aim this Bullet.
-     * \param[in] speed Magnitude of this Bullet's velocity. */
-    Bullet(sf::Vector2f initial_position, sf::Vector2f target, float speed);
-    ~Bullet() override = default;
+     * Bullets are fired in a linear trajectory, from their current position along the trajectory
+     * which passes through its target. */
+    Bullet();
+    virtual ~Bullet() = default;
+
+    void set_speed(float speed) { speed_ = speed; }
+
+    Projectile* create_projectile() override;
 
     /** \brief Fire this Bullet.
      *
-     * On creation, bullets are "dead", they only animated after a call to fire(). */
+     * On creation, bullets are dead, they only animated after a call to fire(). */
     void fire() override;
 
     void update(sf::Time elapsed) override;
-    const sf::Drawable& render() override;
+    void render() override;
 
 private:
     sf::CircleShape graphic_;
+
+    float speed_;
 };

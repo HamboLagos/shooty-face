@@ -7,9 +7,7 @@
 class Collision
 {
 public:
-    Collision() :
-        penetration_vector_({0.f, 0.f})
-    { }
+    Collision() = default;
 
     /** \brief Test for collision between two static entitites.
      *

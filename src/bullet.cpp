@@ -1,41 +1,54 @@
 #include "bullet.hpp"
+#include "utils.hpp"
 
-Bullet::Bullet(sf::Vector2f initial_position, sf::Vector2f target, float speed)
+Bullet::Bullet() :
+    speed_(BULLET_SPEED)
 {
-    set_position(initial_position);
+    set_dimensions({10.f, 10.f});
+    set_alive(false);
+}
 
-    sf::Vector2f trajectory = target - get_position();
-    float trajectory_length = sqrt(trajectory.x*trajectory.x + trajectory.y*trajectory.y);
-    sf::Vector2f trajectory_direction = trajectory / trajectory_length;
-    set_velocity(trajectory_direction * speed);
-
-    kill(); // bullets are animated when fire() is called
+Projectile*
+Bullet::create_projectile()
+{
+    return new Bullet;
 }
 
 void
 Bullet::fire()
 {
-    animate();
+    sf::Vector2f trajectory = get_target() - get_position();
+    float trajectory_length = sqrt(trajectory.x*trajectory.x + trajectory.y*trajectory.y);
+    sf::Vector2f trajectory_direction = trajectory / trajectory_length;
+    set_velocity(trajectory_direction * speed_);
+
+    set_alive(true);
 }
 
 void
 Bullet::update(sf::Time elapsed)
 {
+    if (is_dead()) {
+        return;
+    }
+
     float dt = elapsed.asSeconds();
     move(get_velocity() * dt);
 }
 
-const sf::Drawable&
+void
 Bullet::render()
 {
+    clear_renderings();
+
     if (is_dead()) {
-        graphic_.setFillColor(sf::Color::Transparent); // make it invisible
-        return graphic_;
+        return;
     }
 
     graphic_.setRadius(get_extents().x);
     graphic_.setOrigin(get_extents());
-    graphic_.setPosition(get_position());
+    graphic_.setPosition(pixelate(get_position()));
     graphic_.setFillColor(sf::Color::Red);
-    return graphic_;
+
+    add_rendering(&graphic_);
 }
