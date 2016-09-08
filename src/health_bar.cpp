@@ -20,7 +20,7 @@ void
 HealthBar::render()
 {
     outline_.setOrigin(get_extents());
-    outline_.setPosition(pixelate(get_position()));
+    outline_.setPosition(util::pixelate(get_position()));
     outline_.setSize(get_dimensions());
     outline_.setFillColor(sf::Color::White);
     float min_dimension = std::min(get_dimensions().x, get_dimensions().y);
@@ -28,7 +28,7 @@ HealthBar::render()
     outline_.setOutlineColor(sf::Color::Red);
 
     filled_.setOrigin({0.f, 0.f}); // outline is positioned via min corner to align with outline
-    filled_.setPosition(pixelate(outline_.getPosition() - outline_.getOrigin()));
+    filled_.setPosition(util::pixelate(outline_.getPosition() - outline_.getOrigin()));
     filled_.setSize({get_dimensions().x * percent_filled_, get_dimensions().y});
     filled_.setFillColor(sf::Color::Red);
 

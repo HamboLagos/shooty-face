@@ -61,7 +61,7 @@ Bullet::render()
 
     graphic_.setRadius(get_extents().x);
     graphic_.setOrigin(get_extents());
-    graphic_.setPosition(pixelate(get_position()));
+    graphic_.setPosition(util::pixelate(get_position()));
     graphic_.setFillColor(sf::Color::Red);
 
     add_rendering(&graphic_);

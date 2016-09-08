@@ -25,39 +25,77 @@ int main(int argc, char *argv[])
               << "."        << shooty_face_VERSION_REVIS
               << std::endl;
 
-    static constexpr float WINDOW_WIDTH = 2000.f;
-    static constexpr float WINDOW_HEIGHT = 1000.f;
+    static constexpr float WINDOW_WIDTH = 1200.f;
+    static constexpr float WINDOW_HEIGHT = 1200.f;
 
     sf::RenderWindow app(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Shooty Face");
     app.setFramerateLimit(250);
 
-    Player player;
-    player.set_dimensions({20.f, 20.f});
-    player.set_position({400.f, 300.f});
-    player.get_gun().set_ammunition(std::make_unique<Bullet>());
-
-    Enemy enemy;
-    enemy.set_dimensions({40.f, 40.f});
-    enemy.set_position({50.f, 50.f});
-    enemy.set_velocity({2.f, 2.f});
-    enemy.set_health(50.f);
-
-    sf::Vector2f dimensions = {WINDOW_WIDTH, WINDOW_HEIGHT};
     float border_thickness = 20.f;
-
     std::vector<Barrier> barriers(4); ///< top, left, bottom, right
 
-    barriers[0].set_position({dimensions.x/2.f, border_thickness/2.f});
-    barriers[0].set_dimensions({dimensions.x, border_thickness});
+    barriers[0].set_position({WINDOW_WIDTH/2.f, border_thickness/2.f});
+    barriers[0].set_dimensions({WINDOW_WIDTH, border_thickness});
 
-    barriers[1].set_position({border_thickness/2.f, dimensions.y/2.f});
-    barriers[1].set_dimensions({border_thickness, dimensions.y});
+    barriers[1].set_position({border_thickness/2.f, WINDOW_HEIGHT/2.f});
+    barriers[1].set_dimensions({border_thickness, WINDOW_HEIGHT});
 
-    barriers[2].set_position({dimensions.x/2.f, dimensions.y - border_thickness/2.f});
-    barriers[2].set_dimensions({dimensions.x, border_thickness});
+    barriers[2].set_position({WINDOW_WIDTH/2.f, WINDOW_HEIGHT - border_thickness/2.f});
+    barriers[2].set_dimensions({WINDOW_WIDTH, border_thickness});
 
-    barriers[3].set_position({dimensions.x - border_thickness/2.f, dimensions.y/2.f});
-    barriers[3].set_dimensions({border_thickness, dimensions.y});
+    barriers[3].set_position({WINDOW_WIDTH - border_thickness/2.f, WINDOW_HEIGHT/2.f});
+    barriers[3].set_dimensions({border_thickness, WINDOW_HEIGHT});
+
+    Player player;
+    player.set_dimensions({20.f, 20.f});
+    player.set_position(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT)/2.f);
+    player.get_gun().set_ammunition(std::make_unique<Bullet>());
+
+    std::vector<Enemy> enemies(24);
+    int ndx = 0;
+    for(auto& enemy : enemies) {
+        if (ndx++ <= 3) {
+            enemy.set_fast();
+        } else {
+            enemy.set_slow();
+            enemy.set_health(15.f);
+        }
+    }
+
+    sf::Vector2f zero_offset = {border_thickness + enemies[0].get_extents().x,
+                                border_thickness + enemies[0].get_extents().y};
+    enemies[0].set_position({zero_offset.x, zero_offset.y});
+    enemies[1].set_position({zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
+    enemies[2].set_position({WINDOW_WIDTH - zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
+    enemies[3].set_position({WINDOW_WIDTH - zero_offset.x, zero_offset.y});
+
+    zero_offset = {WINDOW_WIDTH/2.f, WINDOW_HEIGHT/4.f};
+    enemies[4].set_position({zero_offset.x - WINDOW_WIDTH/16.f, zero_offset.y});
+    enemies[5].set_position({zero_offset.x - WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[6].set_position({zero_offset.x, zero_offset.y});
+    enemies[7].set_position({zero_offset.x + WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[8].set_position({zero_offset.x + WINDOW_WIDTH/16.f, zero_offset.y});
+
+    zero_offset = {WINDOW_WIDTH/4.f, WINDOW_HEIGHT/2.f};
+    enemies[9].set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/16.f});
+    enemies[10].set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/8.f});
+    enemies[11].set_position({zero_offset.x, zero_offset.y});
+    enemies[12].set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/8.f});
+    enemies[13].set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/16.f});
+
+    zero_offset = {WINDOW_WIDTH/2.f, WINDOW_HEIGHT*3.f/4.f};
+    enemies[14].set_position({zero_offset.x - WINDOW_WIDTH/16.f, zero_offset.y});
+    enemies[15].set_position({zero_offset.x - WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[16].set_position({zero_offset.x, zero_offset.y});
+    enemies[17].set_position({zero_offset.x + WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[18].set_position({zero_offset.x + WINDOW_WIDTH/16.f, zero_offset.y});
+
+    zero_offset = {WINDOW_WIDTH*3.f/4.f, WINDOW_HEIGHT/2.f};
+    enemies[19].set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/16.f});
+    enemies[20].set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/8.f});
+    enemies[21].set_position({zero_offset.x, zero_offset.y});
+    enemies[22].set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/8.f});
+    enemies[23].set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/16.f});
 
     sf::Clock clock;
     while (app.isOpen()) {
@@ -133,13 +171,14 @@ int main(int argc, char *argv[])
         int projectile_count = player.get_gun().get_magazine().size();
         if (last_projectile_count != projectile_count) {
             last_projectile_count = projectile_count;
-
-            std::cout << "Projectile Count: " <<
-                projectile_count << std::endl;
         }
 
         player.update(elapsed);
-        enemy.update(elapsed);
+
+        for(auto& enemy : enemies) {
+            enemy.set_destination(player.get_position());
+            enemy.update(elapsed);
+        }
 
         Collision collision;
         for(const auto& barrier : barriers) {
@@ -147,14 +186,9 @@ int main(int argc, char *argv[])
                 player.move(collision.get_penetration());
             }
 
-            if (collision.test(enemy.get_box(), barrier.get_box())) {
-                enemy.move(collision.get_penetration());
-
-                auto velocity = enemy.get_velocity();
-                if (collision.get_penetration().x == 0.f) {
-                    enemy.set_velocity({velocity.x, -velocity.y});
-                } else {
-                    enemy.set_velocity({-velocity.x, velocity.y});
+            for(auto& enemy : enemies) {
+                if (collision.test(enemy.get_box(), barrier.get_box())) {
+                    enemy.move(collision.get_penetration());
                 }
             }
 
@@ -165,16 +199,36 @@ int main(int argc, char *argv[])
             }
         }
 
-        for(auto& projectile : player.get_gun().get_magazine()) {
-            if (collision.test(projectile->get_box(), enemy.get_box())) {
-                enemy.damage(5.f);
-                projectile->kill();
-
-                if (enemy.is_alive()) {
-                    enemy.set_velocity(projectile->get_velocity()/4.f);
+        int ndx = 0;
+        for(auto& enemy : enemies) {
+            ++ndx;
+            for (auto iter = enemies.begin() + ndx; iter != enemies.end(); ++iter) {
+                if (collision.test(enemy.get_box(), iter->get_box())) {
+                    std::cout << "Moving enemy: " << ndx << std::endl;
+                    enemy.move(collision.get_penetration());
                 }
             }
         }
+
+        for(auto& projectile : player.get_gun().get_magazine()) {
+            for(auto& enemy : enemies) {
+                if (collision.test(projectile->get_box(), enemy.get_box())) {
+                    enemy.damage(5.f);
+                    projectile->kill();
+                }
+            }
+        }
+
+        for(auto& enemy : enemies) {
+            if (collision.test(player.get_box(), enemy.get_box())) {
+                player.move(collision.get_penetration());
+            }
+        }
+
+        enemies.erase(
+            std::remove_if(enemies.begin(), enemies.end(),
+                           [](auto& enemy) { return enemy.is_dead(); }),
+            enemies.end());
 
         Graphical::Renderings all_renderings;
 
@@ -186,8 +240,10 @@ int main(int argc, char *argv[])
         player.render();
         add_renderings(all_renderings, player.get_renderings());
 
-        enemy.render();
-        add_renderings(all_renderings, enemy.get_renderings());
+        for(auto& enemy : enemies) {
+            enemy.render();
+            add_renderings(all_renderings, enemy.get_renderings());
+        }
 
         app.clear(sf::Color::White);
         for(const auto* rendering : all_renderings) {

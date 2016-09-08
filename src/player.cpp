@@ -40,7 +40,7 @@ Player::render()
 
     graphic_.setSize(get_dimensions());
     graphic_.setOrigin(get_extents());
-    graphic_.setPosition(pixelate(get_position()));
+    graphic_.setPosition(util::pixelate(get_position()));
     graphic_.setFillColor(sf::Color::Blue);
     add_rendering(&graphic_);
 
