@@ -5,7 +5,9 @@
 
 Player::Player() :
     gun_(*this)
-{ }
+{
+    set_velocity({SPEED, SPEED});
+}
 
 void
 Player::update(sf::Time elapsed)

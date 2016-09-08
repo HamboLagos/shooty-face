@@ -5,19 +5,23 @@
 /** \brief Abstraction for an Axis Aligned Bounding Box.
  *
  * AABB's are defined with:
- * 1. An origin at its geometric center.
+ * 1. A position determining its geometric center.
  * 2. An X and Y dimension, for width and height, respectively. */
 class AABB
 {
 public:
-    AABB(sf::Vector2f origin, sf::Vector2f dimensions) :
-        origin_(origin),
+    /** \brief Create a new AABB.
+     *
+     * \param[in] position Geometrically cenetered position.
+     * \param[in] dimensions <Width, Height> of the AABB. */
+    AABB(sf::Vector2f position, sf::Vector2f dimensions) :
+        position_(position),
         dimensions_(dimensions)
     { }
 
-    inline sf::Vector2f get_origin() const { return origin_; }
-    inline float get_x_origin() const { return origin_.x; }
-    inline float get_y_origin() const { return origin_.y; }
+    inline sf::Vector2f get_position() const { return position_; }
+    inline float get_x_position() const { return position_.x; }
+    inline float get_y_position() const { return position_.y; }
 
     inline sf::Vector2f get_dimensions() const { return dimensions_; }
     inline float get_x_dimension() const { return dimensions_.x; }
@@ -29,8 +33,8 @@ public:
 
     inline bool contains_point(sf::Vector2f point) const
     {
-        sf::Vector2f min = origin_ - get_extents();
-        sf::Vector2f max = origin_ + get_extents();
+        sf::Vector2f min = position_ - get_extents();
+        sf::Vector2f max = position_ + get_extents();
 
         return
             min.x < point.x &&
@@ -42,7 +46,7 @@ public:
     inline bool operator==(const AABB& other) const
     {
         return
-            origin_     == other.origin_ &&
+            position_   == other.position_ &&
             dimensions_ == other.dimensions_;
     }
 
@@ -52,6 +56,6 @@ public:
     }
 
 private:
-    sf::Vector2f origin_;
+    sf::Vector2f position_;
     sf::Vector2f dimensions_;
 };

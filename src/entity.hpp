@@ -77,4 +77,7 @@ class GraphicalEntity : public Entity, public Graphical
 public:
     GraphicalEntity() = default;
     virtual ~GraphicalEntity() = default;
+
+    virtual void update(sf::Time elapsed) = 0;
+    virtual void render() = 0;
 };

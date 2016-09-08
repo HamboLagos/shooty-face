@@ -31,21 +31,21 @@ Collision::get_penetration()
 AABB
 minkowski_difference(AABB one, AABB other)
 {
-    sf::Vector2f one_min = one.get_origin() - one.get_extents();
-    sf::Vector2f other_max = other.get_origin() + other.get_extents();
+    sf::Vector2f one_min = one.get_position() - one.get_extents();
+    sf::Vector2f other_max = other.get_position() + other.get_extents();
 
     sf::Vector2f new_min = one_min - other_max;
     sf::Vector2f new_dimensions = one.get_dimensions() + other.get_dimensions();
-    sf::Vector2f new_origin = new_min + new_dimensions/2.f;
+    sf::Vector2f new_position = new_min + new_dimensions/2.f;
 
-    return AABB(new_origin, new_dimensions);
+    return AABB(new_position, new_dimensions);
 }
 
 sf::Vector2f
 get_penetration_vector(AABB mk_diff, sf::Vector2f point)
 {
-    sf::Vector2f min = mk_diff.get_origin() - mk_diff.get_extents();
-    sf::Vector2f max = mk_diff.get_origin() + mk_diff.get_extents();
+    sf::Vector2f min = mk_diff.get_position() - mk_diff.get_extents();
+    sf::Vector2f max = mk_diff.get_position() + mk_diff.get_extents();
 
     float min_distance = std::abs(point.x - min.x);
     sf::Vector2f ret = {min.x, point.y};

@@ -14,6 +14,7 @@ class MockAmmunition : public Ammunition
 {
 public:
     MOCK_METHOD0(create_projectile, Projectile*());
+    MOCK_METHOD0(reload, void());
 };
 
 class MockProjectile : public Projectile

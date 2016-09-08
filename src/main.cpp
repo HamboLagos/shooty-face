@@ -1,13 +1,14 @@
 #include <iostream>
 
-#include <config.h>
 #include <SFML/Graphics.hpp>
 
+#include "barrier.hpp"
+#include "bullet.hpp"
 #include "collision.hpp"
+#include "config.h"
 #include "enemy.hpp"
 #include "health_bar.hpp"
 #include "player.hpp"
-#include "bullet.hpp"
 
 using namespace std;
 using Renderings = Graphical::Renderings;
@@ -24,8 +25,8 @@ int main(int argc, char *argv[])
               << "."        << shooty_face_VERSION_REVIS
               << std::endl;
 
-    static constexpr float WINDOW_WIDTH = 500.f;
-    static constexpr float WINDOW_HEIGHT = 500.f;
+    static constexpr float WINDOW_WIDTH = 2000.f;
+    static constexpr float WINDOW_HEIGHT = 1000.f;
 
     sf::RenderWindow app(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Shooty Face");
     app.setFramerateLimit(250);
@@ -33,7 +34,6 @@ int main(int argc, char *argv[])
     Player player;
     player.set_dimensions({20.f, 20.f});
     player.set_position({400.f, 300.f});
-    player.set_velocity({100.f, 100.f});
     player.get_gun().set_ammunition(std::make_unique<Bullet>());
 
     Enemy enemy;
@@ -43,10 +43,21 @@ int main(int argc, char *argv[])
     enemy.set_health(50.f);
 
     sf::Vector2f dimensions = {WINDOW_WIDTH, WINDOW_HEIGHT};
-    AABB top_wall({0 + dimensions.x/2, 0 - dimensions.y/2}, dimensions);
-    AABB left_wall({0 - dimensions.x/2, 0 + dimensions.y/2}, dimensions);
-    AABB bottom_wall(top_wall.get_origin() + sf::Vector2f(0.f, dimensions.y + WINDOW_HEIGHT), dimensions);
-    AABB right_wall(left_wall.get_origin() + sf::Vector2f(dimensions.x + WINDOW_WIDTH, 0.f), dimensions);
+    float border_thickness = 20.f;
+
+    std::vector<Barrier> barriers(4); ///< top, left, bottom, right
+
+    barriers[0].set_position({dimensions.x/2.f, border_thickness/2.f});
+    barriers[0].set_dimensions({dimensions.x, border_thickness});
+
+    barriers[1].set_position({border_thickness/2.f, dimensions.y/2.f});
+    barriers[1].set_dimensions({border_thickness, dimensions.y});
+
+    barriers[2].set_position({dimensions.x/2.f, dimensions.y - border_thickness/2.f});
+    barriers[2].set_dimensions({dimensions.x, border_thickness});
+
+    barriers[3].set_position({dimensions.x - border_thickness/2.f, dimensions.y/2.f});
+    barriers[3].set_dimensions({border_thickness, dimensions.y});
 
     sf::Clock clock;
     while (app.isOpen()) {
@@ -105,15 +116,17 @@ int main(int argc, char *argv[])
                 break;
 
             case sf::Event::MouseButtonReleased:
-                {
-                    auto target = sf::Mouse::getPosition(app);
-                    player.get_gun().fire(sf::Vector2f(target));
-                }
+                player.get_gun().reload();
                 break;
 
             default:
                 break;
             }
+        }
+
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            auto target = sf::Mouse::getPosition(app);
+            player.get_gun().fire(sf::Vector2f(target));
         }
 
         static int last_projectile_count = 0;
@@ -129,54 +142,46 @@ int main(int argc, char *argv[])
         enemy.update(elapsed);
 
         Collision collision;
-        if (collision.test(player.get_box(), top_wall)) {
-            player.move(collision.get_penetration());
-        }
-        if (collision.test(player.get_box(), left_wall)) {
-            player.move(collision.get_penetration());
-        }
-        if (collision.test(player.get_box(), bottom_wall)) {
-            player.move(collision.get_penetration());
-        }
-        if (collision.test(player.get_box(), right_wall)) {
-            player.move(collision.get_penetration());
-        }
+        for(const auto& barrier : barriers) {
+            if (collision.test(player.get_box(), barrier.get_box())) {
+                player.move(collision.get_penetration());
+            }
 
-        if (collision.test(enemy.get_box(), top_wall) ||
-            collision.test(enemy.get_box(), bottom_wall)) {
-            enemy.move(collision.get_penetration());
-            auto velocity = enemy.get_velocity();
-            enemy.set_velocity({velocity.x, -velocity.y});
-        }
-        if (collision.test(enemy.get_box(), left_wall) ||
-            collision.test(enemy.get_box(), right_wall)) {
-            enemy.move(collision.get_penetration());
-            auto velocity = enemy.get_velocity();
-            enemy.set_velocity({-velocity.x, velocity.y});
+            if (collision.test(enemy.get_box(), barrier.get_box())) {
+                enemy.move(collision.get_penetration());
+
+                auto velocity = enemy.get_velocity();
+                if (collision.get_penetration().x == 0.f) {
+                    enemy.set_velocity({velocity.x, -velocity.y});
+                } else {
+                    enemy.set_velocity({-velocity.x, velocity.y});
+                }
+            }
+
+            for(auto& projectile : player.get_gun().get_magazine()) {
+                if (collision.test(projectile->get_box(), barrier.get_box())) {
+                    projectile->kill();
+                }
+            }
         }
 
         for(auto& projectile : player.get_gun().get_magazine()) {
-            auto projectile_box = projectile->get_box();
-            if (collision.test(projectile_box, top_wall)    ||
-                collision.test(projectile_box, left_wall)   ||
-                collision.test(projectile_box, bottom_wall) ||
-                collision.test(projectile_box, right_wall)) {
-
+            if (collision.test(projectile->get_box(), enemy.get_box())) {
+                enemy.damage(5.f);
                 projectile->kill();
-            }
-
-            if (collision.test(projectile_box, enemy.get_box())) {
-                enemy.damage(10.f);
 
                 if (enemy.is_alive()) {
-                    enemy.set_velocity(projectile->get_velocity()/2.f);
+                    enemy.set_velocity(projectile->get_velocity()/4.f);
                 }
-
-                projectile->kill();
             }
         }
 
         Graphical::Renderings all_renderings;
+
+        for(auto& barrier : barriers) {
+            barrier.render();
+            add_renderings(all_renderings, barrier.get_renderings());
+        }
 
         player.render();
         add_renderings(all_renderings, player.get_renderings());

@@ -8,6 +8,9 @@
 class Player : public GraphicalEntity
 {
 friend class TestablePlayer;
+
+static constexpr float SPEED = 250.f;
+
 public:
     enum class Direction
     {

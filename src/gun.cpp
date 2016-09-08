@@ -11,10 +11,18 @@ void
 Gun::fire(sf::Vector2f target)
 {
     auto projectile = ammunition_->create_projectile();
-    projectile->set_position(operator_.get_position());
-    projectile->set_target(target);
-    projectile->fire();
-    magazine_.push_back(std::unique_ptr<Projectile>(projectile));
+    if (projectile) {
+        projectile->set_position(operator_.get_position());
+        projectile->set_target(target);
+        projectile->fire();
+        magazine_.push_back(std::unique_ptr<Projectile>(projectile));
+    }
+}
+
+void
+Gun::reload()
+{
+    ammunition_->reload();
 }
 
 void

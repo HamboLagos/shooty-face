@@ -20,8 +20,15 @@ public:
 
     inline Magazine& get_magazine() { return magazine_; }
 
-    /** \brief Fire a projectile of the set ammunition type at the given target. */
+    /** \brief Fire a projectile of the set ammunition type at the given target.
+     *
+     * Automatic vs. Semiautomatic operation is determined by the ammunition type. */
     void fire(sf::Vector2f target);
+
+    /** \brief Prepare for the next volley.
+     *
+     * Automatic vs. Semiautomatic operation is determined by the ammunition type. */
+    void reload();
 
     void update(sf::Time elapsed) override;
     void render() override;

@@ -31,4 +31,5 @@ public:
      * Callee assumes responsiblity of the returned projectile. We can't return a std::unique_ptr
      * due to a limitation of GoogleMock requiring return values to be copy-assignable. */
     virtual Projectile* create_projectile() = 0;
+    virtual void reload() = 0;
 };

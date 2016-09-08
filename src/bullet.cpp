@@ -2,7 +2,8 @@
 #include "utils.hpp"
 
 Bullet::Bullet() :
-    speed_(BULLET_SPEED)
+    speed_(BULLET_SPEED),
+    is_firing_(false)
 {
     set_dimensions({10.f, 10.f});
     set_alive(false);
@@ -11,7 +12,20 @@ Bullet::Bullet() :
 Projectile*
 Bullet::create_projectile()
 {
-    return new Bullet;
+    if (!is_firing_ || firing_pin_.getElapsedTime().asSeconds() >= 1.f/FIRE_RATE) {
+        is_firing_ = true;
+        firing_pin_.restart();
+
+        return new Bullet;
+    }
+
+    return nullptr;
+}
+
+void
+Bullet::reload()
+{
+    is_firing_ = false;
 }
 
 void
