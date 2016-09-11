@@ -204,7 +204,6 @@ int main(int argc, char *argv[])
             ++ndx;
             for (auto iter = enemies.begin() + ndx; iter != enemies.end(); ++iter) {
                 if (collision.test(enemy.get_box(), iter->get_box())) {
-                    std::cout << "Moving enemy: " << ndx << std::endl;
                     enemy.move(collision.get_penetration());
                 }
             }

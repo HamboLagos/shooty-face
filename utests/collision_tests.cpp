@@ -73,6 +73,14 @@ TEST_F(DualStaticEntities, CollideIfIntersecting)
     // intersection through a corner
     other_origin = {12.f, 13.f};
     EXPECT_TRUE(sut.test(one(), other()));
+
+    one_origin = {10.f, 10.f};
+    one_dimensions = {10.f, 10.f};
+    other_origin = {12.f, 12.f};
+    other_dimensions = {2.f, 2.f};
+
+    // One fully encapsulates the other
+    EXPECT_TRUE(sut.test(one(), other()));
 }
 
 TEST_F(DualStaticEntities, CalculateTheMinimumPenetrationVector)
