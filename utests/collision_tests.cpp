@@ -1,126 +1,270 @@
 #include <gtest.h>
 #include <gmock.h>
 
-#include <collision.hpp>
-#include <AABB.hpp>
+#include "AABB.hpp"
+#include "collision.hpp"
 
 using namespace testing;
 
-class TestableCollision : public Test
-{
+class TestableCollision : public Test {
 protected:
-    Collision sut;
+    sf::Vector2f first_position_;
+    sf::Vector2f first_dimensions_;
+    sf::Vector2f first_trajectory_;
+
+    sf::Vector2f second_position_;
+    sf::Vector2f second_dimensions_;
+    sf::Vector2f second_trajectory_;
+
+    AABB first() { return AABB(first_position_, first_dimensions_, first_trajectory_); }
+    AABB second() { return AABB(second_position_, second_dimensions_, second_trajectory_); }
 };
 
-class DualStaticEntities : public TestableCollision
+class BroadAndNarrowTest : public TestableCollision { };
+
+TEST_F(BroadAndNarrowTest, AlongXAxis)
 {
-protected:
-    sf::Vector2f one_origin;
-    sf::Vector2f one_dimensions;
+    first_position_ = {10.f, 0.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
 
-    sf::Vector2f other_origin;
-    sf::Vector2f other_dimensions;
-
-    AABB one() { return AABB(one_origin, one_dimensions); }
-    AABB other() { return AABB(other_origin, other_dimensions); }
-};
-
-TEST_F(DualStaticEntities, CollideIfIntersecting)
-{
-    one_origin = {10.f, 10.f};
-    one_dimensions = {2.f, 2.f};
-    other_origin = {10.f, 10.f};
-    other_dimensions = {2.f, 2.f};
+    second_position_ = {10.f, 0.f};
+    second_dimensions_ = {2.f, 2.f};
+    second_trajectory_ = {0.f, 0.f};
 
     // separated across the x-axis: 11 22
-    other_origin.x = 13.f;
-    EXPECT_FALSE(sut.test(one(), other()));
+    second_position_.x = 13.f;
+    EXPECT_FALSE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
 
     // adjacent across the x-axis: 1122
-    other_origin.x = 12.f;
-    EXPECT_FALSE(sut.test(one(), other()));
+    second_position_.x = 12.f;
+    EXPECT_FALSE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
 
     // intersecting on the x-axis: 1212
-    other_origin.x = 11.f;
-    EXPECT_TRUE(sut.test(one(), other()));
+    second_position_.x = 11.f;
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
 
-    one_origin = {10.f, 10.f};
-    one_dimensions = {2.f, 2.f};
-    other_origin = {10.f, 10.f};
-    other_dimensions = {2.f, 2.f};
+    // again, but use an expanded state space
+    first_position_.x -= 1.f;
+    first_trajectory_.x = 1.f;
 
-    // separated across the y-axis
-    other_origin.y = 13.f;
-    EXPECT_FALSE(sut.test(one(), other()));
+    second_position_.x += 1.f;
+    second_trajectory_.x = -1.f;
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
 
-    // adjacent across the y-axis
-    other_origin.y = 12.f;
-    EXPECT_FALSE(sut.test(one(), other()));
-
-    // intersecting on the y-axis
-    other_origin.y = 11.f;
-    EXPECT_TRUE(sut.test(one(), other()));
-
-    one_origin = {10.f, 10.f};
-    one_dimensions = {3.f, 4.f};
-    other_origin = {10.f, 10.f};
-    other_dimensions = {3.f, 4.f};
-
-    // coincident on a corner
-    other_origin = {13.f, 14.f};
-    EXPECT_FALSE(sut.test(one(), other()));
-
-    // intersection through a corner
-    other_origin = {12.f, 13.f};
-    EXPECT_TRUE(sut.test(one(), other()));
-
-    one_origin = {10.f, 10.f};
-    one_dimensions = {10.f, 10.f};
-    other_origin = {12.f, 12.f};
-    other_dimensions = {2.f, 2.f};
-
-    // One fully encapsulates the other
-    EXPECT_TRUE(sut.test(one(), other()));
+    // last case, broad phase passes but narrow fails
+    // second zooms past first, missing collision
+    second_position_.y += 10.f;
+    second_trajectory_.y = -100.f;
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
 }
 
-TEST_F(DualStaticEntities, CalculateTheMinimumPenetrationVector)
+TEST_F(BroadAndNarrowTest, AlongYAxis)
 {
-    one_origin = {10.f, 10.f};
-    one_dimensions = {2.f, 2.f};
-    other_origin = {10.f, 10.f};
-    other_dimensions = {2.f, 2.f};
-    sf::Vector2f penetration = {0.f, 0.f};
+    first_position_ = {0.f, 10.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
+
+    second_position_ = {0.f, 10.f};
+    second_dimensions_ = {2.f, 2.f};
+    second_trajectory_ = {0.f, 0.f};
+
+    // separated across the x-axis: 11 22
+    second_position_.y = 13.f;
+    EXPECT_FALSE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    // adjacent across the x-axis: 1122
+    second_position_.y = 12.f;
+    EXPECT_FALSE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
 
     // intersecting on the x-axis: 1212
-    other_origin.x = 11.f;
-    penetration = {-1.f, 0.f};
-    EXPECT_TRUE(sut.test(one(), other()));
-    EXPECT_FLOAT_EQ(sut.get_penetration().x, penetration.x);
-    EXPECT_FLOAT_EQ(sut.get_penetration().y, penetration.y);
+    second_position_.y = 11.f;
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+
+    // again, but use an expanded state space
+    first_position_.y -= 1.f;
+    first_trajectory_.y = 1.f;
+
+    second_position_.y += 1.f;
+    second_trajectory_.y = -1.f;
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
+
+    // last case, broad phase passes but narrow fails
+    // second zooms past first, missing collision
+    second_position_.x += 10.f;
+    second_trajectory_.x = -100.f;
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+}
+
+TEST_F(BroadAndNarrowTest, FirstEncapsulatesSecond)
+{
+    first_position_ = {10.f, 10.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
+
+    second_position_ = {10.f, 10.f};
+    second_dimensions_ = {1.f, 1.f};
+    second_trajectory_ = {0.f, 0.f};
+
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+
+    // again, but use an expanded state space
+    first_position_.y -= 1.f;
+    first_trajectory_.y = 1.f;
+
+    second_position_.x += 1.f;
+    second_trajectory_.x = -1.f;
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+}
+
+class NarrowTest : public BroadAndNarrowTest { };
+
+TEST_F(NarrowTest, AtVaryingXTrajectories)
+{
+    first_position_ = {11.f, 11.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
+
+    second_position_ = {15.f, 11.f};
+    second_dimensions_ = {2.f, 2.f};
+    second_trajectory_ = {0.f, 0.f};
+
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    first_trajectory_.x = 4.f;
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.x = -4.f;
+    EXPECT_FLOAT_EQ(0.25f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.x = 2.f;
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    // mirror across the y-axis
+    first_position_ = {-11.f, 11.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
+
+    second_position_ = {-15.f, 11.f};
+    second_dimensions_ = {2.f, 2.f};
+    second_trajectory_ = {0.f, 0.f};
+
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    first_trajectory_.x = -4.f;
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.x = 4.f;
+    EXPECT_FLOAT_EQ(0.25f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.x = -2.f;
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+}
+
+TEST_F(NarrowTest, AtVaryingYTrajectories)
+{
+    first_position_ = {11.f, 11.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
+
+    second_position_ = {11.f, 15.f};
+    second_dimensions_ = {2.f, 2.f};
+    second_trajectory_ = {0.f, 0.f};
+
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    first_trajectory_.y = 4.f;
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.y = -4.f;
+    EXPECT_FLOAT_EQ(0.25f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.y = 2.f;
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    // mirror across the x-axis
+    first_position_ = {11.f, -11.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
+
+    second_position_ = {11.f, -15.f};
+    second_dimensions_ = {2.f, 2.f};
+    second_trajectory_ = {0.f, 0.f};
+
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    first_trajectory_.y = -4.f;
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.y = 4.f;
+    EXPECT_FLOAT_EQ(0.25f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.y = -2.f;
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+}
+
+class Penetration : public TestableCollision
+{
+protected:
+    sf::Vector2f penetration_;
+};
+
+TEST_F(Penetration, CalculateTheMinimumPenetrationVector)
+{
+    first_position_ = {10.f, 10.f};
+    first_dimensions_ = {2.f, 2.f};
+    first_trajectory_ = {0.f, 0.f};
+
+    second_position_ = {10.f, 10.f};
+    second_dimensions_ = {2.f, 2.f};
+    second_trajectory_ = {0.f, 0.f};
+
+    penetration_ = {0.f, 0.f};
+
+    // intersecting on the x-axis: 1212
+    second_position_.x = 11.f;
+    penetration_ = {1.f, 0.f};
+
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+    EXPECT_EQ(penetration_, Collision::get_penetration(first(), second()));
 
     // intersecting on the x-axis: 2121
-    other_origin.x = 9.f;
-    penetration = {1.f, 0.f};
-    EXPECT_TRUE(sut.test(one(), other()));
-    EXPECT_FLOAT_EQ(sut.get_penetration().x, penetration.x);
-    EXPECT_FLOAT_EQ(sut.get_penetration().y, penetration.y);
+    second_position_.x = 9.f;
+    penetration_ = {-1.f, 0.f};
 
-    one_origin = {10.f, 10.f};
-    one_dimensions = {2.f, 2.f};
-    other_origin = {10.f, 10.f};
-    other_dimensions = {2.f, 2.f};
-    penetration = {0.f, 0.f};
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+    EXPECT_EQ(penetration_, Collision::get_penetration(first(), second()));
+
+    first_position_ = {10.f, 10.f};
+    second_position_ = {10.f, 10.f};
+    penetration_ = {0.f, 0.f};
 
     // intersecting on the y-axis
-    other_origin.y = 9.f;
-    penetration = {0.f, 1.f};
-    EXPECT_TRUE(sut.test(one(), other()));
-    EXPECT_FLOAT_EQ(sut.get_penetration().x, penetration.x);
-    EXPECT_FLOAT_EQ(sut.get_penetration().y, penetration.y);
+    second_position_.y = 9.f;
+    penetration_ = {0.f, -1.f};
 
-    other_origin.y = 11.f;
-    penetration = {0.f, -1.f};
-    EXPECT_TRUE(sut.test(one(), other()));
-    EXPECT_FLOAT_EQ(sut.get_penetration().x, penetration.x);
-    EXPECT_FLOAT_EQ(sut.get_penetration().y, penetration.y);
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+    EXPECT_EQ(penetration_, Collision::get_penetration(first(), second()));
+
+    second_position_.y = 11.f;
+    penetration_ = {0.f, 1.f};
+
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+    EXPECT_EQ(penetration_, Collision::get_penetration(first(), second()));
 }

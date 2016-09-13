@@ -69,19 +69,22 @@ class BoundingBox : public TestableEntity
 protected:
     static const sf::Vector2f position_;
     static const sf::Vector2f dimensions_;
+    static const sf::Vector2f velocity_;
 };
 const sf::Vector2f BoundingBox::position_ = {100.f, 200.f};
 const sf::Vector2f BoundingBox::dimensions_ = {10.f, 20.f};
+const sf::Vector2f BoundingBox::velocity_ = {1.f, 2.f};
 
 TEST_F(BoundingBox, IsCalculatedFromTheEntityProperties)
 {
     sut.set_position(position_);
     sut.set_dimensions(dimensions_);
-    EXPECT_EQ(sut.get_box(), AABB({100.f, 200.f}, {10.f, 20.f}));
+    sut.set_velocity(velocity_);
+    EXPECT_EQ(sut.get_box(sf::seconds(0.5f)), AABB({100.f, 200.f}, {10.f, 20.f}, {0.5f, 1.f}));
 
     sut.move({10.f, 20.f});
     sut.scale(4.f);
-    EXPECT_EQ(sut.get_box(), AABB({110.f, 220.f}, {40.f, 80.f}));
+    EXPECT_EQ(sut.get_box(sf::seconds(0.25f)), AABB({110.f, 220.f}, {40.f, 80.f}, {0.25f, 0.5f}));
 }
 
 class Aliveness : public TestableEntity { };

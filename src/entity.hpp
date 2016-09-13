@@ -37,9 +37,10 @@ public:
 
     /** \brief Get the AABB for this Entity.
      *
-     * The AABB is invalidated by a change to this Entity's dimensions or position. To ensure
-     * memory-safety, the AABB is recalculated on each call. */
-    inline AABB get_box() const { return AABB(position_, dimensions_); }
+     * The AABB is invalidated by a change to this Entity's dimensions, position, or velocity. To
+     * ensure memory-safety, the AABB is never cached, but is recalculated on each call. */
+    inline AABB get_box(sf::Time elapsed = sf::Time::Zero) const
+    { return AABB(position_, dimensions_, velocity_ * elapsed.asSeconds()); }
 
     /** \brief Update this entity.
      *

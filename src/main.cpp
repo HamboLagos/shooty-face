@@ -180,49 +180,49 @@ int main(int argc, char *argv[])
             enemy.update(elapsed);
         }
 
-        Collision collision;
-        for(const auto& barrier : barriers) {
-            if (collision.test(player.get_box(), barrier.get_box())) {
-                player.move(collision.get_penetration());
-            }
+        /// TODO update the collision logic
+        /* for(const auto& barrier : barriers) { */
+        /*     if (Collision::test(player.get_box(), barrier.get_box())) { */
+        /*         player.move(Collision::get_penetration()); */
+        /*     } */
 
-            for(auto& enemy : enemies) {
-                if (collision.test(enemy.get_box(), barrier.get_box())) {
-                    enemy.move(collision.get_penetration());
-                }
-            }
+        /*     for(auto& enemy : enemies) { */
+        /*         if (Collision::test(enemy.get_box(), barrier.get_box())) { */
+        /*             enemy.move(Collision::get_penetration()); */
+        /*         } */
+        /*     } */
 
-            for(auto& projectile : player.get_gun().get_magazine()) {
-                if (collision.test(projectile->get_box(), barrier.get_box())) {
-                    projectile->kill();
-                }
-            }
-        }
+        /*     for(auto& projectile : player.get_gun().get_magazine()) { */
+        /*         if (Collision::test(projectile->get_box(), barrier.get_box())) { */
+        /*             projectile->kill(); */
+        /*         } */
+        /*     } */
+        /* } */
 
-        int ndx = 0;
-        for(auto& enemy : enemies) {
-            ++ndx;
-            for (auto iter = enemies.begin() + ndx; iter != enemies.end(); ++iter) {
-                if (collision.test(enemy.get_box(), iter->get_box())) {
-                    enemy.move(collision.get_penetration());
-                }
-            }
-        }
+        /* int ndx = 0; */
+        /* for(auto& enemy : enemies) { */
+        /*     ++ndx; */
+        /*     for (auto iter = enemies.begin() + ndx; iter != enemies.end(); ++iter) { */
+        /*         if (Collision::test(enemy.get_box(), iter->get_box())) { */
+        /*             enemy.move(Collision::get_penetration()); */
+        /*         } */
+        /*     } */
+        /* } */
 
-        for(auto& projectile : player.get_gun().get_magazine()) {
-            for(auto& enemy : enemies) {
-                if (collision.test(projectile->get_box(), enemy.get_box())) {
-                    enemy.damage(5.f);
-                    projectile->kill();
-                }
-            }
-        }
+        /* for(auto& projectile : player.get_gun().get_magazine()) { */
+        /*     for(auto& enemy : enemies) { */
+        /*         if (Collision::test(projectile->get_box(), enemy.get_box())) { */
+        /*             enemy.damage(5.f); */
+        /*             projectile->kill(); */
+        /*         } */
+        /*     } */
+        /* } */
 
-        for(auto& enemy : enemies) {
-            if (collision.test(player.get_box(), enemy.get_box())) {
-                player.move(collision.get_penetration());
-            }
-        }
+        /* for(auto& enemy : enemies) { */
+        /*     if (Collision::test(player.get_box(), enemy.get_box())) { */
+        /*         player.move(Collision::get_penetration()); */
+        /*     } */
+        /* } */
 
         enemies.erase(
             std::remove_if(enemies.begin(), enemies.end(),

@@ -2,71 +2,74 @@
 
 #include "collision.hpp"
 
-AABB minkowski_difference(AABB one, AABB other);
-sf::Vector2f get_penetration_vector(AABB mk_diff, sf::Vector2f point);
+const sf::Vector2f Collision::ORIGIN = sf::Vector2f(0.f, 0.f);
 
 bool
-Collision::test(AABB one, AABB other)
+Collision::broad_test(const AABB& first, const AABB& second)
 {
-    // dual static entities collision detection
-    AABB mk_diff = minkowski_difference(one, other);
-    sf::Vector2f origin = {0.f, 0.f};
-    bool positive = mk_diff.contains_point(origin);
+    auto mk_diff = AABB::minkowski_difference(AABB::state_space_for(first),
+                                              AABB::state_space_for(second));
+    return mk_diff.contains_point(ORIGIN);
+}
 
-    if (!positive) {
-        penetration_vector_ = {0.f, 0.f};
+float
+Collision::narrow_test(const AABB& first, const AABB& second)
+{
+    // protect ourselves from impossible collisions
+    if (!broad_test(first, second)) {
+        return 1.f;
+    }
+
+    auto mk_diff = AABB::minkowski_difference(first, second);
+
+    // colliding before trajectory applied
+    if (mk_diff.contains_point(ORIGIN)) {
+        return 0.f;
+    }
+
+    // Find the entry and exit time for x and y
+    // using [noonat.github.io/intersect]
+    auto near = mk_diff.get_near_corner();
+    auto far = mk_diff.get_far_corner();
+
+    float entry_x = near.x / -mk_diff.get_x_trajectory();
+    float exit_x  = far.x  / -mk_diff.get_x_trajectory();
+    float entry_y = near.y / -mk_diff.get_y_trajectory();
+    float exit_y  = far.y  / -mk_diff.get_y_trajectory();
+
+    if (mk_diff.get_x_trajectory() == 0.f) {
+        entry_x = -std::numeric_limits<float>::infinity();
+        exit_x = std::numeric_limits<float>::infinity();
+    }
+
+    if (mk_diff.get_y_trajectory() == 0.f) {
+        entry_y = -std::numeric_limits<float>::infinity();
+        exit_y = std::numeric_limits<float>::infinity();
+    }
+
+    if (entry_x > exit_y || entry_y > exit_x) {
+        return 1.f;
+    }
+
+    float entry = std::max(entry_x, entry_y);
+    float exit = std::min(exit_x, exit_y);
+
+    if (entry >= 1.f || exit <= 0.f) {
+        return 1.f;
+    }
+
+    return entry;
+}
+
+sf::Vector2f
+Collision::get_penetration(const AABB& first, const AABB& second)
+{
+    auto mk_diff = AABB::minkowski_difference(first, second);
+    auto near = mk_diff.get_near_corner();
+
+    if (std::abs(near.x) < std::abs(near.y)) {
+        return sf::Vector2f(near.x, 0.f);
     } else {
-        penetration_vector_ = -get_penetration_vector(mk_diff, origin);
+        return sf::Vector2f(0.f, near.y);
     }
-
-    return positive;
-}
-
-sf::Vector2f
-Collision::get_penetration()
-{
-    return penetration_vector_;
-}
-
-AABB
-minkowski_difference(AABB one, AABB other)
-{
-    sf::Vector2f one_min = one.get_position() - one.get_extents();
-    sf::Vector2f other_max = other.get_position() + other.get_extents();
-
-    sf::Vector2f new_min = one_min - other_max;
-    sf::Vector2f new_dimensions = one.get_dimensions() + other.get_dimensions();
-    sf::Vector2f new_position = new_min + new_dimensions/2.f;
-
-    return AABB(new_position, new_dimensions);
-}
-
-sf::Vector2f
-get_penetration_vector(AABB mk_diff, sf::Vector2f point)
-{
-    sf::Vector2f min = mk_diff.get_position() - mk_diff.get_extents();
-    sf::Vector2f max = mk_diff.get_position() + mk_diff.get_extents();
-
-    float min_distance = std::abs(point.x - min.x);
-    sf::Vector2f ret = {min.x, point.y};
-
-    float temp = std::abs(point.x - max.x);
-    if (temp < min_distance) {
-        min_distance = temp;
-        ret = {max.x, point.y};
-    }
-
-    temp = std::abs(point.y - min.y);
-    if (temp < min_distance) {
-        min_distance = temp;
-        ret = {point.x, min.y};
-    }
-
-    temp = std::abs(point.x - max.y);
-    if (temp < min_distance) {
-        min_distance = temp;
-        ret = {point.x, max.y};
-    }
-
-    return ret;
 }
