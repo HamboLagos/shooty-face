@@ -9,7 +9,6 @@ class Projectile : public Entity
 {
 public:
     Projectile() = default;
-
     virtual ~Projectile() = default;
 
     /** \brief Set the target for this projectile.
@@ -17,7 +16,7 @@ public:
      * The semantics of projectile trajectory depend on the specific instance of Projectile type. */
     inline void set_target(sf::Vector2f target) { target_ = target; }
 
-    /** \brief Test Method, returns the target for this Projectile. */
+    /** \brief Returns the target for this projectile. */
     inline sf::Vector2f get_target() const { return target_; }
 
     /** \brief Fires the projectile.
@@ -25,11 +24,7 @@ public:
      * Clients should set a target for the projectile first, via set_target().*/
     virtual void fire() = 0;
 
-    /** \brief Renders this projectile */
     virtual void update(sf::Time elapsed) = 0;
-
-    /** \brief Renders this projectile */
-    virtual const sf::Drawable* render() = 0;
 
 private:
     sf::Vector2f target_; ///< The target of this projectile
@@ -42,7 +37,6 @@ class Ammunition
 {
 public:
     Ammunition() = default;
-
     virtual ~Ammunition() = default;
 
     /** \brief Creates a new projectile.

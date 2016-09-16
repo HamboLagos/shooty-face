@@ -1,12 +1,13 @@
 #pragma once
 
-#include <SFML/Graphics/Transformable.hpp>
+#include <SFML/System/Vector2.hpp>
 
 /** \brief Abstraction for an Axis Aligned Bounding Box.
  *
  * AABB's are defined with:
  * 1. A position determining its geometric center.
- * 2. An X and Y dimension, for width and height, respectively. */
+ * 2. An X and Y dimension, for width and height, respectively.
+ * 3. A trajectory, <dx, dy>, for the current frame. */
 class AABB
 {
 public:
@@ -17,44 +18,41 @@ public:
      * \param[in] position Geometrically cenetered position.
      * \param[in] dimensions <Width, Height> of the AABB.
      * \param[in] trajectory AABB trajectory for this frame (velocity * dt) */
-    AABB(sf::Vector2f position, sf::Vector2f dimensions, sf::Vector2f trajectory = {0.f, 0.f}) :
-        position_(position),
-        dimensions_(dimensions),
-        trajectory_(trajectory)
-    { }
+    AABB(sf::Vector2f position, sf::Vector2f dimensions, sf::Vector2f trajectory = {0.f, 0.f});
+
+    ~AABB() = default;
 
     inline sf::Vector2f get_position() const { return position_; }
-    inline float get_x_position() const { return position_.x; }
-    inline float get_y_position() const { return position_.y; }
-
     inline sf::Vector2f get_dimensions() const { return dimensions_; }
-    inline float get_x_dimension() const { return dimensions_.x; }
-    inline float get_y_dimension() const { return dimensions_.y; }
-
-    inline sf::Vector2f get_extents() const { return dimensions_/2.f; }
-    inline float get_x_extent() const { return dimensions_.x/2.f; }
-    inline float get_y_extent() const { return dimensions_.y/2.f; }
-
+    inline sf::Vector2f get_extents() const { return extents_; }
     inline sf::Vector2f get_trajectory() const { return trajectory_; }
-    inline float get_x_trajectory() const { return trajectory_.x; }
-    inline float get_y_trajectory() const { return trajectory_.y; }
 
-    sf::Vector2f get_min_corner() const; ///< \return corner with most negative coordinates
-    sf::Vector2f get_max_corner() const; ///< \return corner with most positive coordinates
-    sf::Vector2f get_near_corner() const; ///< \return corner closest to origin, or min corner
+    /** \brief Returns the corner with the most negative coordinates.
+     *
+     * For SFML coordinate axis, this is the highest corner in the window, to the most left. */
+    sf::Vector2f get_min_corner() const;
+
+    /** \brief Returns the corner with the most positive coordinates.
+     *
+     * For SFML coordinate axis, this is the lowest corner in the window, to the most right. */
+    sf::Vector2f get_max_corner() const;
+
+    /** \brief Returns the corner closest to the origin.
+     *
+     * If more than one corner is equidistant to the origin, returns get_min_corner(). */
+    sf::Vector2f get_near_corner() const;
+
+    /** \brief Returns the corner furthest from the origin.
+     *
+     * If more than one corner is equidistant to the origin, returns get_max_corner(). */
     sf::Vector2f get_far_corner() const; ///< \return corner furthest from origin, or max corner
 
-    inline bool contains_point(sf::Vector2f point) const
-    {
-        auto min = get_min_corner();
-        auto max = get_max_corner();
-
-        return
-            min.x < point.x &&
-            max.x > point.x &&
-            min.y < point.y &&
-            max.y > point.y;
-    }
+    /** \brief Tests whether the given point is contained within this AABB without applying
+     * trajectory.
+     *
+     * To test broadly whether a point could be contained by this AABB, repeat this test with the
+     * state space for this AABB, via AABB::state_space_for(this).contains_point(point). */
+    bool contains_point(sf::Vector2f point) const;
 
     inline bool operator==(const AABB& other) const
     {
@@ -72,18 +70,28 @@ public:
     /** \brief Returns the state space for the given AABB.
      *
      * The state space is defined as the smallest AABB which fully encompasses all possible
-     * positions of the given AABB for the current frame (ie. given its initial position and
-     * trajectory). For an AABB with a zero trajectory, the state space is itself the AABB. */
+     * positions of the given AABB for the current frame (ie. taking its trajectory into account).
+     * The resultant state-space AABB will, by definition, have zero trajectory.
+     *
+     * For an AABB with a zero trajectory, the state space is a copy of itself. For an AABB with
+     * nonzero trajectory, the state space is the AABB with its width and height extended by the
+     * trajectory.x and trajectory.y components, respectivly, and its position moved half the
+     * distance along trajectory vector. */
     static AABB state_space_for(const AABB& box);
 
-    /** \brief Calculates the minkowski difference (first - second).
+    /** \brief Calculates the minkowski difference of (first - second).
      *
-     * Resultant trajectory of the difference is the relative motion of first WRT second. If first
-     * and second are converging, it will point near the origin. */
+     * The Minkowski difference is a new AABB whose position is first.position - second.position,
+     * and dimensions are first.dimensions + second.dimensions.
+     *
+     * The trajectory of the difference is the relative motion of first WRT second. If first and
+     * second are converging, it will point from the new position near to the origin. If they are
+     * diverging, it will point far from the origin. */
     static AABB minkowski_difference(const AABB& first, const AABB& second);
 
 private:
-    sf::Vector2f position_;
-    sf::Vector2f dimensions_;
-    sf::Vector2f trajectory_;
+    sf::Vector2f position_;  ///< This AABB's position, geometrically centered
+    sf::Vector2f dimensions_; ///< This AABB's dimensions, <width, height>
+    sf::Vector2f extents_; ///< This AABB's extents, <width/2, height/2>
+    sf::Vector2f trajectory_; ///< This AABB trajectory, aka travel distance this frame
 };

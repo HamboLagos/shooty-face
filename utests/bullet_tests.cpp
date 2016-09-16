@@ -2,6 +2,9 @@
 #include <gmock.h>
 
 #include "bullet.hpp"
+#include "components/phyics.hpp"
+
+#include "mocks/clock_mock.hpp"
 
 using namespace testing;
 
@@ -9,57 +12,135 @@ class TestableBullet : public Test
 {
 protected:
     Bullet sut;
-    auto& get_graphic(const Bullet& sut) { return sut.graphic_; }
 };
+
+class Components : public TestableBullet { };
+
+TEST_F(Components, ExistenceThereof)
+{
+    EXPECT_TRUE(sut.has_component<Physics>());
+    EXPECT_TRUE(sut.has_component<Graphics>());
+}
+
+TEST_F(Components, Physics_SetsDefaultMoveSpeed)
+{
+    auto* physics = sut.get_component<Physics>();
+    EXPECT_FLOAT_EQ(Bullet::SPEED, physics->get_move_speed());
+}
+
+TEST_F(Components, Graphics_ReturnsACircleForThisBullet)
+{
+    auto* physics = sut.get_component<Physics>();
+
+    physics->set_position({100.1f, 200.2f});
+    physics->set_dimensions({10.1f, 20.2f});
+
+    const auto renderings = sut.get_component<Graphics>()->render();
+    const auto* graphic = static_cast<const sf::CircleShape*>(renderings[0]);
+
+    EXPECT_EQ(sf::Vector2f(100.f, 200.f), graphic->getPosition());
+    EXPECT_FLOAT_EQ(5.05f, graphic->getRadius());
+}
 
 class BeforeFiring : public TestableBullet { };
 
-TEST_F(BeforeFiring, InvisibleUntilFired)
+TEST_F(BeforeFiring, StaticUntilFired)
 {
-    sut.render();
-    EXPECT_EQ(0, sut.get_renderings().size());
+    EXPECT_TRUE(sut.get_component<Physics>()->is_static());
 
     sut.fire();
-    sut.render();
-    EXPECT_NE(0, sut.get_renderings().size());
+
+    EXPECT_TRUE(sut.get_component<Physics>()->is_dynamic());
 }
 
-class FiringAtTarget : public TestableBullet
+class AfterFiring : public TestableBullet
 {
 protected:
     static const sf::Vector2f initial_position_;
     static const sf::Vector2f target_;
     static const float speed_;
 
-    FiringAtTarget()
+    AfterFiring()
     {
-        sut.set_position(initial_position_);
+        auto* physics = sut.get_component<Physics>();
+        physics->set_position(initial_position_);
+        physics->set_move_speed(speed_);
+
         sut.set_target(target_);
-        sut.set_speed(speed_);
     }
 };
-const sf::Vector2f FiringAtTarget::initial_position_ = {10.f, 20.f};
-const sf::Vector2f FiringAtTarget::target_           = {13.f, 24.f};
-const float FiringAtTarget::speed_                   = 5.f;
+const sf::Vector2f AfterFiring::initial_position_ = {10.f, 20.f};
+const sf::Vector2f AfterFiring::target_           = {13.f, 24.f};
+const float AfterFiring::speed_                   = 5.f;
 
-TEST_F(FiringAtTarget, BulletProceedsInLinearTrajectoryThroughTarget)
+TEST_F(AfterFiring, BulletProceedsInLinearTrajectoryThroughTarget)
 {
-    EXPECT_TRUE(sut.is_dead());
-
     sut.fire();
-    EXPECT_TRUE(sut.is_alive());
-    EXPECT_EQ(sut.get_position(), sf::Vector2f(10.f, 20.f));
-    EXPECT_EQ(sut.get_velocity(), sf::Vector2f(3.f, 4.f));
 
-    // along trajectory to target
-    sut.update(sf::seconds(0.5f));
-    EXPECT_EQ(sut.get_position(), sf::Vector2f(11.5f, 22.f));
+    auto* physics = sut.get_component<Physics>();
+    EXPECT_EQ(initial_position_, physics->get_position());
+    EXPECT_EQ(sf::Vector2f(3.f, 4.f), physics->get_velocity());
+}
 
-    // at target
-    sut.update(sf::seconds(0.5f));
-    EXPECT_EQ(sut.get_position(), sf::Vector2f(13.f, 24.f));
+class TestableBulletAmmunition : public Test
+{
+protected:
+    NiceMock<ClockMock>* clock_;
+    BulletAmmunition sut;
 
-    // continues on trajectory through target
-    sut.update(sf::seconds(0.5f));
-    EXPECT_EQ(sut.get_position(), sf::Vector2f(14.5f, 26.f));
+    std::vector<Projectile*> projectiles_;
+
+    TestableBulletAmmunition() :
+        clock_(new NiceMock<ClockMock>),
+        sut(std::unique_ptr<ClockIF>(clock_))
+    { }
+
+    ~TestableBulletAmmunition()
+    {
+        for(auto* projectile : projectiles_) {
+            delete projectile;
+        }
+    }
+};
+
+TEST_F(TestableBulletAmmunition, RestartsTheClockOnTheFirstCallAndAfterReload)
+{
+    EXPECT_CALL(*clock_, getElapsedTime()).Times(0);
+    EXPECT_CALL(*clock_, restart()).Times(1);
+
+    projectiles_.push_back(sut.create_projectile());
+    EXPECT_NE(nullptr, projectiles_.back());
+
+    sut.reload();
+
+    EXPECT_CALL(*clock_, getElapsedTime()).Times(0);
+    EXPECT_CALL(*clock_, restart()).Times(1);
+
+    projectiles_.push_back(sut.create_projectile());
+    EXPECT_NE(nullptr, projectiles_.back());
+}
+
+TEST_F(TestableBulletAmmunition, WontFireASecondTimeUntilTimeHasElapsed)
+{
+    projectiles_.push_back(sut.create_projectile());
+
+    EXPECT_CALL(*clock_, getElapsedTime()).WillOnce(Return(sf::Time::Zero));
+    EXPECT_CALL(*clock_, restart()).Times(0);
+
+    projectiles_.push_back(sut.create_projectile());
+    EXPECT_EQ(nullptr, projectiles_.back());
+
+    EXPECT_CALL(*clock_, getElapsedTime())
+        .WillOnce(Return(sf::seconds(1.f/(2.f * BulletAmmunition::FIRE_RATE))));
+    EXPECT_CALL(*clock_, restart()).Times(0);
+
+    projectiles_.push_back(sut.create_projectile());
+    EXPECT_EQ(nullptr, projectiles_.back());
+
+    EXPECT_CALL(*clock_, getElapsedTime())
+        .WillOnce(Return(sf::seconds(1.f/BulletAmmunition::FIRE_RATE)));
+    EXPECT_CALL(*clock_, restart()).Times(1);
+
+    projectiles_.push_back(sut.create_projectile());
+    EXPECT_NE(nullptr, projectiles_.back());
 }

@@ -4,7 +4,6 @@ add_executable(
     ${TEST_NAME}
     ${TEST_NAME}.cpp
     ${CMAKE_SOURCE_DIR}/src/bullet.cpp
-    ${CMAKE_SOURCE_DIR}/src/entity.cpp
     ${CMAKE_SOURCE_DIR}/src/gun.cpp
     ${CMAKE_SOURCE_DIR}/src/utils.cpp
 )
