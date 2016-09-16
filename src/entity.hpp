@@ -1,14 +1,26 @@
 #pragma once
 
+#include <memory>
+#include <unordered_map>
+#include <typeindex>
+
 #include <SFML/System/Time.hpp>
 
 #include "AABB.hpp"
-#include "graphical.hpp"
+
+class Component
+{
+public:
+    Component() = default;
+
+    virtual ~Component() = default;
+};
 
 /** \brief Entity is a base for things which have dimension. */
 class Entity {
 public:
     Entity();
+
     virtual ~Entity() = default;
 
     inline void set_dimensions(sf::Vector2f dimensions) { dimensions_ = dimensions; }
@@ -42,6 +54,18 @@ public:
     inline AABB get_box(sf::Time elapsed = sf::Time::Zero) const
     { return AABB(position_, dimensions_, velocity_ * elapsed.asSeconds()); }
 
+    /** \brief Checks if this entity has this component type. */
+    template<class T> bool has_component();
+
+    /** \brief Default constructs and returns a component of type T. */
+    template<class T> T* add_component();
+
+    /** \brief Copy constructs and returns the component of type T. */
+    template<class T> T* set_component(std::unique_ptr<Component> component);
+
+    /** \brief Retrieves the component for this entity of type T, or nullptr. */
+    template<class T> T* get_component();
+
     /** \brief Update this entity.
      *
      * Typically called once per main-loop tick.
@@ -68,17 +92,56 @@ private:
     sf::Vector2f dimensions_; ///< <width, height> of this entity, defines AABB
     sf::Vector2f position_; ///< Current <x, y> position
     sf::Vector2f velocity_; ///< Current <vx, vy> velocity
+
     bool is_alive_; ///< "Aliveness" changes depending on the client context
     bool is_solid_; ///< Solid entities are "impassable"
+
+    std::unordered_map<std::type_index, std::unique_ptr<Component>> components_;
 };
 
-/** \brief GraphicalEntity is a base for things which are drawn on screen. */
-class GraphicalEntity : public Entity, public Graphical
+template<class T>
+bool
+Entity::has_component()
 {
-public:
-    GraphicalEntity() = default;
-    virtual ~GraphicalEntity() = default;
+    static_assert(std::is_base_of<Component, T>(), "Require Component Subclass");
 
-    virtual void update(sf::Time elapsed) = 0;
-    virtual void render() = 0;
-};
+    return components_.count(std::type_index(typeid(T))) != 0;
+}
+
+template<class T>
+T*
+Entity::add_component()
+{
+    static_assert(std::is_base_of<Component, T>(), "Require Component Subclass");
+
+    auto& ptr = components_[std::type_index(typeid(T))];
+    ptr.reset(new T());
+
+    return static_cast<T*>(ptr.get());
+}
+
+template<class T>
+T*
+Entity::set_component(std::unique_ptr<Component> component)
+{
+    static_assert(std::is_base_of<Component, T>(), "Require Component Subclass");
+
+    auto& ptr = components_[std::type_index(typeid(T))];
+    ptr = std::move(component);
+
+    return static_cast<T*>(ptr.get());
+}
+
+template<class T>
+T*
+Entity::get_component()
+{
+    static_assert(std::is_base_of<Component, T>(), "Require Component Subclass");
+
+    if (!has_component<T>()) {
+        return nullptr;
+    }
+
+    auto& ptr = components_[std::type_index(typeid(T))];
+    return static_cast<T*>(ptr.get());
+}

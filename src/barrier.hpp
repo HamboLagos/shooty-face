@@ -3,16 +3,18 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 
 #include "entity.hpp"
-#include "utils.hpp"
+#include "graphics.hpp"
 
-class Barrier : public GraphicalEntity
+class Barrier : public Entity
 {
 public:
-    Barrier() = default;
+    Barrier();
+
     virtual ~Barrier() = default;
 
     void update(sf::Time elapsed) override { }
-    void render() override;
+
+    const Graphics::Renderings render();
 
 private:
     sf::RectangleShape graphic_;

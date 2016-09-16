@@ -3,7 +3,9 @@ set(TEST_NAME "player_tests")
 add_executable(
     ${TEST_NAME}
     ${TEST_NAME}.cpp
+    ${CMAKE_SOURCE_DIR}/src/AABB.cpp
     ${CMAKE_SOURCE_DIR}/src/bullet.cpp
+    ${CMAKE_SOURCE_DIR}/src/collision.cpp
     ${CMAKE_SOURCE_DIR}/src/entity.cpp
     ${CMAKE_SOURCE_DIR}/src/gun.cpp
     ${CMAKE_SOURCE_DIR}/src/player.cpp

@@ -1,51 +1,88 @@
 #include "player.hpp"
 #include "utils.hpp"
+#include "collision.hpp"
+#include "game.hpp"
 
 #include <cmath>
+
+#include <iostream>
 
 Player::Player() :
     gun_(*this)
 {
-    set_velocity({SPEED, SPEED});
+    auto* graphics = add_component<Graphics>();
+    graphics->on_render(std::bind(&Player::render, this));
 }
 
 void
 Player::update(sf::Time elapsed)
 {
-    float dt = elapsed.asSeconds();
     float dx = 0.f;
     float dy = 0.f;
 
     if (is_moving.left && !is_moving.right) {
-        dx = -get_velocity().x * dt;
+        dx = -1.f;
     } else if (is_moving.right && !is_moving.left) {
-        dx = get_velocity().x * dt;
+        dx = 1.f;
     }
 
     if (is_moving.up && !is_moving.down) {
-        dy = -get_velocity().y * dt;
+        dy = -1.f;
     } else if (is_moving.down && !is_moving.up) {
-        dy = get_velocity().y * dt;
+        dy = 1.f;
     }
 
-    move({dx, dy});
+    auto direction = util::direction({dx, dy});
+    set_velocity(direction * SPEED);
+
+
+    float dt = elapsed.asSeconds();
+    bool resolved = false;
+    for (int loops = 0; !resolved && loops < 8; ++loops) {
+        dt = elapsed.asSeconds();
+        resolved = true;
+
+        for(auto& entity : Game::instance().entities()) {
+            if (entity->is_passable() || entity.get() == this) {
+                continue;
+            }
+
+            if (Collision::broad_test(this->get_box(elapsed), entity->get_box())) {
+                auto dt_safe = Collision::narrow_test(this->get_box(elapsed), entity->get_box());
+
+                if (dt_safe == 0.f) {
+                    auto unpenetrate = Collision::get_penetration(this->get_box(), entity->get_box());
+                    entity->move(unpenetrate);
+                    resolved = false;
+                    continue;
+                } else if (dt_safe < dt) {
+                    dt = dt_safe;
+                }
+            }
+        }
+    }
+
+    move(get_velocity() * dt);
 
     gun_.update(elapsed);
 }
 
-void
+const Graphics::Renderings
 Player::render()
 {
-    clear_renderings();
-
     graphic_.setSize(get_dimensions());
     graphic_.setOrigin(get_extents());
     graphic_.setPosition(util::pixelate(get_position()));
     graphic_.setFillColor(sf::Color::Blue);
-    add_rendering(&graphic_);
 
-    gun_.render();
-    add_renderings(gun_.get_renderings());
+    const auto& gun_renderings = gun_.render();
+
+    Graphics::Renderings renderings;
+    renderings.reserve(1 + gun_renderings.size());
+    renderings.push_back(&graphic_);
+    renderings.insert(renderings.end(), gun_renderings.begin(), gun_renderings.end());
+
+    return std::move(renderings);
 }
 
 void

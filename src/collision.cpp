@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "collision.hpp"
+#include "utils.hpp"
 
 const sf::Vector2f Collision::ORIGIN = sf::Vector2f(0.f, 0.f);
 
@@ -67,9 +68,19 @@ Collision::get_penetration(const AABB& first, const AABB& second)
     auto mk_diff = AABB::minkowski_difference(first, second);
     auto near = mk_diff.get_near_corner();
 
-    if (std::abs(near.x) < std::abs(near.y)) {
-        return sf::Vector2f(near.x, 0.f);
-    } else {
-        return sf::Vector2f(0.f, near.y);
+    // if it's rigt on the edge, return a small value
+    float small_value = 0.01f;
+    if (near.x == 0.f) {
+        return -util::direction({mk_diff.get_far_corner().x, 0.f}) * small_value;
     }
+    if (near.y == 0.f) {
+        return -util::direction({0.f, mk_diff.get_far_corner().y}) * small_value;
+    }
+
+    // if penetration is nonzero, return it
+    if (std::abs(near.x) <= std::abs(near.y)) {
+        return sf::Vector2f(near.x, 0.f);
+    }
+
+    return sf::Vector2f(0.f, near.y);
 }

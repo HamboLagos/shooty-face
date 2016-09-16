@@ -1,12 +1,13 @@
 #include "bullet.hpp"
 #include "utils.hpp"
+#include "collision.hpp"
+#include "game.hpp"
+#include "health.hpp"
 
 Bullet::Bullet() :
-    speed_(BULLET_SPEED),
     is_firing_(false)
 {
     set_dimensions({10.f, 10.f});
-    set_alive(false);
 }
 
 Projectile*
@@ -31,12 +32,8 @@ Bullet::reload()
 void
 Bullet::fire()
 {
-    sf::Vector2f trajectory = get_target() - get_position();
-    float trajectory_length = sqrt(trajectory.x*trajectory.x + trajectory.y*trajectory.y);
-    sf::Vector2f trajectory_direction = trajectory / trajectory_length;
-    set_velocity(trajectory_direction * speed_);
-
-    set_alive(true);
+    auto trajectory = get_target() - get_position();
+    set_velocity(util::direction(trajectory) * SPEED);
 }
 
 void
@@ -48,21 +45,30 @@ Bullet::update(sf::Time elapsed)
 
     float dt = elapsed.asSeconds();
     move(get_velocity() * dt);
+
+    for(auto& entity : Game::instance().entities()) {
+        if (entity->is_passable() || entity.get() == this ||
+            entity.get() == Game::instance().get_player()) {
+            continue;
+        }
+
+        if (Collision::broad_test(get_box(), entity->get_box())) {
+            if (entity->has_component<Health>()) {
+                entity->get_component<Health>()->damage(5.f);
+            }
+
+            kill();
+        }
+    }
 }
 
-void
+const sf::Drawable*
 Bullet::render()
 {
-    clear_renderings();
-
-    if (is_dead()) {
-        return;
-    }
-
     graphic_.setRadius(get_extents().x);
     graphic_.setOrigin(get_extents());
     graphic_.setPosition(util::pixelate(get_position()));
     graphic_.setFillColor(sf::Color::Red);
 
-    add_rendering(&graphic_);
+    return &graphic_;
 }

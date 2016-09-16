@@ -4,8 +4,9 @@
 
 #include "entity.hpp"
 #include "gun.hpp"
+#include "graphics.hpp"
 
-class Player : public GraphicalEntity
+class Player : public Entity
 {
 friend class TestablePlayer;
 
@@ -23,7 +24,8 @@ public:
     Player();
 
     void update(sf::Time elapsed) override;
-    void render() override;
+
+    const Graphics::Renderings render();
 
     /** \brief Apply velocity to the player in the given direction.
      *

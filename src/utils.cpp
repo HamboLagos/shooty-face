@@ -13,7 +13,13 @@ pixelate(sf::Vector2f vector)
 sf::Vector2f
 direction(sf::Vector2f vector)
 {
-    return vector / length(vector);
+    auto magnitude = length(vector);
+
+    if (magnitude != 0.f) {
+        return vector / magnitude;
+    } else {
+        return vector;
+    }
 }
 
 float

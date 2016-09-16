@@ -3,9 +3,7 @@
 
 Gun::Gun(const Entity& the_operator) :
     operator_(the_operator)
-{
-    set_solid(false);
-}
+{ }
 
 void
 Gun::fire(sf::Vector2f target)
@@ -15,7 +13,7 @@ Gun::fire(sf::Vector2f target)
         projectile->set_position(operator_.get_position());
         projectile->set_target(target);
         projectile->fire();
-        magazine_.push_back(std::unique_ptr<Projectile>(projectile));
+        magazine_.emplace_back(projectile);
     }
 }
 
@@ -40,13 +38,15 @@ Gun::update(sf::Time elapsed)
     }
 }
 
-void
+const Graphics::Renderings
 Gun::render()
 {
-    clear_renderings();
+    Graphics::Renderings renderings;
+    renderings.reserve(magazine_.size());
 
     for(auto& projectile : magazine_) {
-        projectile->render();
-        add_renderings(projectile->get_renderings());
+        renderings.push_back(projectile->render());
     }
+
+    return renderings;
 }

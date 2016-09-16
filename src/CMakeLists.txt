@@ -7,9 +7,9 @@ add_executable(${EXECUTABLE_NAME}
     ${PROJECT_SOURCE_DIR}/src/collision.cpp
     ${PROJECT_SOURCE_DIR}/src/enemy.cpp
     ${PROJECT_SOURCE_DIR}/src/entity.cpp
+    ${PROJECT_SOURCE_DIR}/src/game.cpp
     ${PROJECT_SOURCE_DIR}/src/gun.cpp
-    ${PROJECT_SOURCE_DIR}/src/health_bar.cpp
-    ${PROJECT_SOURCE_DIR}/src/healthy.cpp
+    ${PROJECT_SOURCE_DIR}/src/health.cpp
     ${PROJECT_SOURCE_DIR}/src/main.cpp
     ${PROJECT_SOURCE_DIR}/src/player.cpp
     ${PROJECT_SOURCE_DIR}/src/utils.cpp

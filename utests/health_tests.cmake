@@ -1,11 +1,11 @@
-set(TEST_NAME "healthy_tests")
+set(TEST_NAME "health_tests")
 
 add_executable(
     ${TEST_NAME}
     ${TEST_NAME}.cpp
     ${CMAKE_SOURCE_DIR}/src/entity.cpp
     ${CMAKE_SOURCE_DIR}/src/health_bar.cpp
-    ${CMAKE_SOURCE_DIR}/src/healthy.cpp
+    ${CMAKE_SOURCE_DIR}/src/health.cpp
     ${CMAKE_SOURCE_DIR}/src/utils.cpp
 )
 target_link_libraries(${TEST_NAME} ${GTEST_LIBRARIES} ${SFML_LIBRARIES})
