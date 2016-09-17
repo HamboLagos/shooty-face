@@ -44,7 +44,7 @@ public:
 private:
     sf::RectangleShape graphic_;
 
-    Gun gun_;
+    /* Gun gun_; */
 
     struct MovementDirections
     {

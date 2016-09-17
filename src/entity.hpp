@@ -19,8 +19,8 @@ public:
 
     virtual ~Entity() = default;
 
-    /** \brief Checks if this entity has the given component type. */
-    template<class T> bool has_component();
+    /** \brief Checks if entity has the given component, and its not nullptr. */
+    template<class T> bool has_component() const;
 
     /** \brief Default constructs a new component for this entity.
      *
@@ -44,7 +44,7 @@ public:
      * Clients can check whether this entity has this component via has_component().
      *
      * \return The given component for this entity, or nullptr if it doesn't have one. */
-    template<class T> T* get_component();
+    template<class T> T* get_component() const;
 
     /** \brief Update this entity.
      *

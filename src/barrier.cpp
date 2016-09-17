@@ -1,6 +1,6 @@
 #include "barrier.hpp"
 
-#include "components/phyics.hpp"
+#include "components/physics.hpp"
 #include "utils.hpp"
 
 Barrier::Barrier()

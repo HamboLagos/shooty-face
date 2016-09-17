@@ -1,12 +1,61 @@
 #include <gtest.h>
 #include <gmock.h>
 
-#include "AABB.hpp"
 #include "collision.hpp"
+#include "components/physics.hpp"
+#include "mocks/entity_mock.hpp"
 
 using namespace testing;
 
-class TestableCollision : public Test {
+class TestableCollision : public Test { };
+
+class SanityCheck : public TestableCollision { };
+
+TEST_F(SanityCheck, SelfCollisionIsAlwaysInvalid)
+{
+    EntityMock first; first.add_component<Physics>();
+
+    EXPECT_FALSE(Collision::sanity_check(first, first));
+}
+
+TEST_F(SanityCheck, NoPhysicsComponent)
+{
+    EntityMock first;
+    EntityMock second;
+    EXPECT_FALSE(Collision::sanity_check(first, second));
+
+    first.add_component<Physics>();
+    EXPECT_FALSE(Collision::sanity_check(first, second));
+
+    first.set_component<Physics>(nullptr);
+    second.add_component<Physics>();
+    EXPECT_FALSE(Collision::sanity_check(first, second));
+}
+
+TEST_F(SanityCheck, PassableEntities)
+{
+    EntityMock first; first.add_component<Physics>()->set_solid(false);
+    EntityMock second; second.add_component<Physics>()->set_solid(false);
+    EXPECT_FALSE(Collision::sanity_check(first, second));
+
+    first.get_component<Physics>()->set_solid(true);
+    second.get_component<Physics>()->set_solid(false);
+    EXPECT_FALSE(Collision::sanity_check(first, second));
+
+    first.get_component<Physics>()->set_solid(false);
+    second.get_component<Physics>()->set_solid(true);
+    EXPECT_FALSE(Collision::sanity_check(first, second));
+}
+
+TEST_F(SanityCheck, PassesCheck)
+{
+    EntityMock first; first.add_component<Physics>();
+    EntityMock second; second.add_component<Physics>();
+    EXPECT_TRUE(Collision::sanity_check(first, second));
+}
+
+class BroadAndNarrowTest : public TestableCollision
+{
 protected:
     sf::Vector2f first_position_;
     sf::Vector2f first_dimensions_;
@@ -19,8 +68,6 @@ protected:
     AABB first() { return AABB(first_position_, first_dimensions_, first_trajectory_); }
     AABB second() { return AABB(second_position_, second_dimensions_, second_trajectory_); }
 };
-
-class BroadAndNarrowTest : public TestableCollision { };
 
 TEST_F(BroadAndNarrowTest, AlongXAxis)
 {
@@ -119,6 +166,18 @@ TEST_F(BroadAndNarrowTest, FirstEncapsulatesSecond)
     EXPECT_TRUE(Collision::broad_test(first(), second()));
     EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
 
+    // shrink first and second down to points
+    first_dimensions_ = {0.f, 0.f};
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+
+    first_dimensions_ = {2.f, 2.f};
+    second_dimensions_ = {0.f, 0.f};
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+
+    second_dimensions_ = {1.f, 1.f};
+
     // again, but use an expanded state space
     first_position_.y -= 1.f;
     first_trajectory_.y = 1.f;
@@ -127,6 +186,7 @@ TEST_F(BroadAndNarrowTest, FirstEncapsulatesSecond)
     second_trajectory_.x = -1.f;
     EXPECT_TRUE(Collision::broad_test(first(), second()));
     EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
+
 }
 
 class NarrowTest : public BroadAndNarrowTest { };
@@ -215,7 +275,7 @@ TEST_F(NarrowTest, AtVaryingYTrajectories)
     EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
 }
 
-class Penetration : public TestableCollision
+class Penetration : public BroadAndNarrowTest
 {
 protected:
     sf::Vector2f penetration_;

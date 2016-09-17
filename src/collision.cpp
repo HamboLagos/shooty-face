@@ -1,9 +1,30 @@
 #include <cmath>
+#include <limits>
 
 #include "collision.hpp"
+#include "components/physics.hpp"
 #include "utils.hpp"
 
 const sf::Vector2f Collision::ORIGIN = sf::Vector2f(0.f, 0.f);
+
+bool
+Collision::sanity_check(const Entity& first, const Entity& second)
+{
+    if (&first == &second) {
+        return false;
+    }
+
+    if (!first.has_component<Physics>() || !second.has_component<Physics>()) {
+        return false;
+    }
+
+    if (first.get_component<Physics>()->is_passable() ||
+        second.get_component<Physics>()->is_passable()) {
+        return false;
+    }
+
+    return true;
+}
 
 bool
 Collision::broad_test(const AABB& first, const AABB& second)
@@ -30,22 +51,19 @@ Collision::narrow_test(const AABB& first, const AABB& second)
 
     // Find the entry and exit time for x and y
     // using [noonat.github.io/intersect]
-    auto near = mk_diff.get_near_corner();
-    auto far = mk_diff.get_far_corner();
+    float entry_x = -std::numeric_limits<float>::infinity();
+    float exit_x = std::numeric_limits<float>::infinity();
+    float entry_y = -std::numeric_limits<float>::infinity();
+    float exit_y = std::numeric_limits<float>::infinity();
 
-    float entry_x = near.x / -mk_diff.get_x_trajectory();
-    float exit_x  = far.x  / -mk_diff.get_x_trajectory();
-    float entry_y = near.y / -mk_diff.get_y_trajectory();
-    float exit_y  = far.y  / -mk_diff.get_y_trajectory();
-
-    if (mk_diff.get_x_trajectory() == 0.f) {
-        entry_x = -std::numeric_limits<float>::infinity();
-        exit_x = std::numeric_limits<float>::infinity();
+    if (mk_diff.get_trajectory().x != 0.f) {
+        entry_x = mk_diff.get_near_corner().x / -mk_diff.get_trajectory().x;
+        exit_x  = mk_diff.get_far_corner().x  / -mk_diff.get_trajectory().x;
     }
 
-    if (mk_diff.get_y_trajectory() == 0.f) {
-        entry_y = -std::numeric_limits<float>::infinity();
-        exit_y = std::numeric_limits<float>::infinity();
+    if (mk_diff.get_trajectory().y != 0.f) {
+        entry_y = mk_diff.get_near_corner().y / -mk_diff.get_trajectory().y;
+        exit_y  = mk_diff.get_far_corner().y  / -mk_diff.get_trajectory().y;
     }
 
     if (entry_x > exit_y || entry_y > exit_x) {

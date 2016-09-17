@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SFML/System/Time.hpp>
+
 #include "component.hpp"
 #include "../AABB.hpp"
 
@@ -15,6 +17,9 @@ public:
 
     virtual ~Physics() = default;
 
+    /** \brief Moves by velocity for given dt if not static. */
+    inline void update(float dt) { if (!is_static_) move(velocity_ * dt); }
+
     inline void set_position(sf::Vector2f position) { position_ = position; }
     inline void move(sf::Vector2f distance) { position_ += distance; }
     inline sf::Vector2f get_position() const { return position_; }
@@ -22,8 +27,7 @@ public:
     inline void set_velocity(sf::Vector2f velocity) { velocity_ = velocity; }
     inline sf::Vector2f get_velocity() const { return velocity_; }
 
-    inline sf::Vector2f get_trajectory(sf::Time elapsed) const
-    { return velocity_ * elapsed.asSeconds(); }
+    inline sf::Vector2f get_trajectory(float dt) const { return velocity_ * dt; }
 
     inline void set_move_speed(float move_speed) { move_speed_ = move_speed; }
     inline float get_move_speed() const { return move_speed_; }
@@ -47,8 +51,8 @@ public:
      *
      * The AABB is invalidated by a change to this Entity's dimensions, position, or trajectory. To
      * ensure memory-safety, the AABB is never cached, but is recalculated on each call. */
-    inline AABB get_box(sf::Time elapsed = sf::Time::Zero) const
-    { return AABB(position_, dimensions_, get_trajectory(elapsed)); }
+    inline AABB get_box(float dt = 0.f) const
+    { return AABB(position_, dimensions_, get_trajectory(dt)); }
 
 private:
     sf::Vector2f position_; ///< Current <x, y> position

@@ -24,8 +24,8 @@ public:
     Clock() = default;
     virtual ~Clock() = default;
 
-    sf::Time getElapsedTime() const { return clock_.getElapsedTime(); }
-    sf::Time restart() { return clock_.restart(); }
+    sf::Time getElapsedTime() const override { return clock_.getElapsedTime(); }
+    sf::Time restart() override { return clock_.restart(); }
 
 private:
     sf::Clock clock_;

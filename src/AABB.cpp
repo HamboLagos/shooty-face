@@ -1,9 +1,10 @@
+#include <cmath>
+
 #include "AABB.hpp"
 
 AABB::AABB(sf::Vector2f position, sf::Vector2f dimensions, sf::Vector2f trajectory) :
     position_(position),
     dimensions_(dimensions),
-    extents_(dimensions/2.f),
     trajectory_(trajectory)
 { }
 
@@ -24,8 +25,8 @@ AABB::get_near_corner() const
 {
     sf::Vector2f near_corner;
 
-    float x1 = position_.x - extents_.x;
-    float x2 = position_.x + extents_.x;
+    float x1 = position_.x - get_extents().x;
+    float x2 = position_.x + get_extents().x;
 
     if (std::abs(x1) != std::abs(x2)) {
         near_corner.x = std::abs(x1) < std::abs(x2) ? x1 : x2;
@@ -33,8 +34,8 @@ AABB::get_near_corner() const
         near_corner.x = get_min_corner().x;
     }
 
-    float y1 = position_.y - extents_.y;
-    float y2 = position_.y + extents_.y;
+    float y1 = position_.y - get_extents().y;
+    float y2 = position_.y + get_extents().y;
 
     if (std::abs(y1) != std::abs(y2)) {
         near_corner.y = std::abs(y1) < std::abs(y2) ? y1 : y2;
@@ -50,8 +51,8 @@ AABB::get_far_corner() const
 {
     sf::Vector2f far_corner;
 
-    float x1 = position_.x - extents_.x;
-    float x2 = position_.x + extents_.x;
+    float x1 = position_.x - get_extents().x;
+    float x2 = position_.x + get_extents().x;
 
     if (std::abs(x1) != std::abs(x2)) {
         far_corner.x = std::abs(x1) > std::abs(x2) ? x1 : x2;
@@ -59,8 +60,8 @@ AABB::get_far_corner() const
         far_corner.x = get_max_corner().x;
     }
 
-    float y1 = position_.y - extents_.y;
-    float y2 = position_.y + extents_.y;
+    float y1 = position_.y - get_extents().y;
+    float y2 = position_.y + get_extents().y;
 
     if (std::abs(y1) != std::abs(y2)) {
         far_corner.y = std::abs(y1) > std::abs(y2) ? y1 : y2;

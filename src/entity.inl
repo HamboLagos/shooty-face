@@ -3,16 +3,19 @@
 /** \brief Compile-Time assert that T is derived from Component. */
 template<class T> constexpr void check_T();
 
-/** \brief Maps from type T to a unique Key. */
+/** \brief Checks if the given T has a value set in the map. */
+template<class T> constexpr bool exists_in_map(const Entity::ComponentMap& map);
+
+/** \brief Maps from type T to a unique Key for the map. */
 template<class T> const Entity::ComponentMap::key_type key_from_T();
 
 template<class T>
 bool
-Entity::has_component()
+Entity::has_component() const
 {
     check_T<T>();
 
-    return !!components_.count(key_from_T<T>());
+    return exists_in_map<T>(components_) && components_.at(key_from_T<T>());
 }
 
 template<class T>
@@ -30,7 +33,7 @@ Entity::set_component(std::unique_ptr<Component> component)
 {
     check_T<T>();
 
-    if (has_component<T>()) {
+    if (exists_in_map<T>(components_)) {
         components_.at(key_from_T<T>()) = std::move(component);
     } else {
         components_.insert(
@@ -38,16 +41,16 @@ Entity::set_component(std::unique_ptr<Component> component)
                                       std::move(component)));
     }
 
-    return get_component<T>();
+    return static_cast<T*>(components_.at(key_from_T<T>()).get());
 }
 
 template<class T>
 T*
-Entity::get_component()
+Entity::get_component() const
 {
     check_T<T>();
 
-    if (!has_component<T>()) {
+    if (!exists_in_map<T>(components_)) {
         return nullptr;
     }
 
@@ -59,6 +62,12 @@ void
 check_T()
 {
     static_assert(std::is_base_of<Component, T>(), "Require Component Subclass");
+}
+
+template<class T> constexpr
+bool exists_in_map(const Entity::ComponentMap& map)
+{
+    return !!map.count(key_from_T<T>());
 }
 
 template<class T>

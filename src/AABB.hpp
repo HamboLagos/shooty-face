@@ -19,12 +19,11 @@ public:
      * \param[in] dimensions <Width, Height> of the AABB.
      * \param[in] trajectory AABB trajectory for this frame (velocity * dt) */
     AABB(sf::Vector2f position, sf::Vector2f dimensions, sf::Vector2f trajectory = {0.f, 0.f});
-
     ~AABB() = default;
 
     inline sf::Vector2f get_position() const { return position_; }
     inline sf::Vector2f get_dimensions() const { return dimensions_; }
-    inline sf::Vector2f get_extents() const { return extents_; }
+    inline sf::Vector2f get_extents() const { return dimensions_/2.f; }
     inline sf::Vector2f get_trajectory() const { return trajectory_; }
 
     /** \brief Returns the corner with the most negative coordinates.
@@ -92,6 +91,5 @@ public:
 private:
     sf::Vector2f position_;  ///< This AABB's position, geometrically centered
     sf::Vector2f dimensions_; ///< This AABB's dimensions, <width, height>
-    sf::Vector2f extents_; ///< This AABB's extents, <width/2, height/2>
     sf::Vector2f trajectory_; ///< This AABB trajectory, aka travel distance this frame
 };

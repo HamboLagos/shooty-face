@@ -3,7 +3,7 @@
 
 #include "barrier.hpp"
 
-#include "components/phyics.hpp"
+#include "components/physics.hpp"
 
 using namespace testing;
 

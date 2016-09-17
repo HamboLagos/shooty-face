@@ -1,15 +1,24 @@
 #pragma once
 
-#include <utility>
+#include <SFML/System/Vector2.hpp>
 
 #include "AABB.hpp"
+#include "entity.hpp"
 
 class Collision
 {
-    static const sf::Vector2f ORIGIN;
-
 public:
     Collision() = delete;
+
+    /** \brief Performs sanity check on the two entities.
+     *
+     * Returns false under the following conditions:
+     * 1. First and Second are the same entity (address equality).
+     * 2. Either first and/or second has no physics component.
+     * 3. Either first and/or second is not a solid.
+     *
+     * \return true iff none of the above conditions are met. */
+    static bool sanity_check(const Entity& first, const Entity& second);
 
     /** \brief Broad phase test for collision between two Entities.
      *
@@ -36,4 +45,7 @@ public:
      *
      * \return Penetration of "first" into "second" iff narrow_test() returns 0.f. */
     static sf::Vector2f get_penetration(const AABB& first, const AABB& second);
+
+private:
+    static const sf::Vector2f ORIGIN; ///< Origin is <0, 0>
 };

@@ -1,6 +1,9 @@
 #include "bullet.hpp"
 
-#include "components/phyics.hpp"
+#include "collision.hpp"
+#include "components/health.hpp"
+#include "components/physics.hpp"
+#include "game.hpp"
 #include "utils.hpp"
 
 Bullet::Bullet()
@@ -23,31 +26,36 @@ Bullet::fire()
     physics->set_static(false);
 }
 
-/// TODO add tests
 void
 Bullet::update(sf::Time elapsed)
 {
-    if (is_dead()) {
-        return;
+    float dt = elapsed.asSeconds();
+    auto box = get_component<Physics>()->get_box(dt);
+
+    for(const auto& entity : Game::instance().entities()) {
+        if (!Collision::sanity_check(*this, *entity)) {
+            continue;
+        }
+
+        auto entity_box = entity->get_component<Physics>()->get_box();
+
+        if (Collision::broad_test(box, entity_box))
+        {
+            float percent_safe = Collision::narrow_test(box, entity_box);
+            if (percent_safe < 1.f) {
+                if (entity->has_component<Health>()) {
+                    entity->get_component<Health>()->damage(DAMAGE);
+                }
+
+                get_component<Physics>()->update(dt * percent_safe);
+                kill();
+            }
+        }
     }
 
-    /* float dt = elapsed.asSeconds(); */
-    /* move(get_velocity() * dt); */
-
-    /* for(auto& entity : Game::instance().entities()) { */
-    /*     if (entity->is_passable() || entity.get() == this || */
-    /*         entity.get() == Game::instance().get_player()) { */
-    /*         continue; */
-    /*     } */
-
-    /*     if (Collision::broad_test(get_box(), entity->get_box())) { */
-    /*         if (entity->has_component<Health>()) { */
-    /*             entity->get_component<Health>()->damage(5.f); */
-    /*         } */
-
-    /*         kill(); */
-    /*     } */
-    /* } */
+    if (is_alive()) {
+        get_component<Physics>()->update(dt);
+    }
 }
 
 const Renderer::Renderings
@@ -66,10 +74,6 @@ Bullet::render()
 
     return std::move(renderings);
 }
-
-BulletAmmunition::BulletAmmunition() :
-    is_firing_(false)
-{ }
 
 Projectile*
 BulletAmmunition::create_projectile()
