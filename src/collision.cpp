@@ -37,17 +37,19 @@ Collision::broad_test(const AABB& first, const AABB& second)
 float
 Collision::narrow_test(const AABB& first, const AABB& second)
 {
-    // protect ourselves from impossible collisions
-    if (!broad_test(first, second)) {
-        return 1.f;
-    }
-
     auto mk_diff = AABB::minkowski_difference(first, second);
 
     // colliding before trajectory applied
     if (mk_diff.contains_point(ORIGIN)) {
         return 0.f;
     }
+
+    if (mk_diff.get_trajectory() == sf::Vector2f(0.f, 0.f)) {
+        return 1.f;
+    }
+
+    // We don't check for mk_diff overlapping x-axis or y-axis when y-velocity or x-velocity are 0.
+    // That is implicitly checked when broad_test() returned true for the same AABBs.
 
     // Find the entry and exit time for x and y
     // using [noonat.github.io/intersect]
@@ -66,14 +68,10 @@ Collision::narrow_test(const AABB& first, const AABB& second)
         exit_y  = mk_diff.get_far_corner().y  / -mk_diff.get_trajectory().y;
     }
 
-    if (entry_x > exit_y || entry_y > exit_x) {
-        return 1.f;
-    }
-
     float entry = std::max(entry_x, entry_y);
     float exit = std::min(exit_x, exit_y);
 
-    if (entry >= 1.f || exit <= 0.f) {
+    if (entry > exit || entry >= 1.f || exit <= 0.f) {
         return 1.f;
     }
 

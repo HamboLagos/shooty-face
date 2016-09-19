@@ -23,6 +23,7 @@ include_directories(${SFML_INCLUDE_DIR})
 
 # Builds the game executable
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+include_directories(src)
 add_subdirectory(src)
 
 # Builds the tests

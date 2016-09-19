@@ -34,6 +34,9 @@ public:
      * traveled before a collision would occur, in range (0.f, 1.f], or 1.f if no collision will
      * occur.
      *
+     * Results are invalid if broad_test() does not also return true. Assumptions are made in the
+     * implementation of narrow_test() that broad_test() signals a potential collision.
+     *
      * \return Percentage of trajectory until collision (0.f, 1.f], or 1.f if no collision. */
     static float narrow_test(const AABB& first, const AABB& second);
 

@@ -3,7 +3,7 @@
 #include <SFML/System/Time.hpp>
 
 #include "component.hpp"
-#include "../AABB.hpp"
+#include "AABB.hpp"
 
 class Physics : public Component
 {
@@ -14,7 +14,6 @@ public:
         is_solid_(true),
         is_static_(false)
     { }
-
     virtual ~Physics() = default;
 
     /** \brief Moves by velocity for given dt if not static. */

@@ -2,16 +2,22 @@
 #include "utils.hpp"
 #include "collision.hpp"
 #include "game.hpp"
+#include "components/physics.hpp"
 
 #include <cmath>
 
 #include <iostream>
 
-Player::Player() :
-    gun_(*this)
+/* Player::Player() : */
+/*     gun_(*this) */
+/* { */
+/*     auto* graphics = add_component<Graphics>(); */
+/*     graphics->on_render(std::bind(&Player::render, this)); */
+/* } */
+
+Player::Player()
 {
-    auto* graphics = add_component<Graphics>();
-    graphics->on_render(std::bind(&Player::render, this));
+    add_component<Physics>();
 }
 
 void
@@ -33,57 +39,56 @@ Player::update(sf::Time elapsed)
     }
 
     auto direction = util::direction({dx, dy});
-    set_velocity(direction * SPEED);
+    get_component<Physics>()->set_velocity(direction * SPEED);
 
+    /* float dt = elapsed.asSeconds(); */
+    /* bool resolved = false; */
+    /* for (int loops = 0; !resolved && loops < 8; ++loops) { */
+    /*     dt = elapsed.asSeconds(); */
+    /*     resolved = true; */
 
-    float dt = elapsed.asSeconds();
-    bool resolved = false;
-    for (int loops = 0; !resolved && loops < 8; ++loops) {
-        dt = elapsed.asSeconds();
-        resolved = true;
+    /*     for(auto& entity : Game::instance().entities()) { */
+    /*         if (entity->is_passable() || entity.get() == this) { */
+    /*             continue; */
+    /*         } */
 
-        for(auto& entity : Game::instance().entities()) {
-            if (entity->is_passable() || entity.get() == this) {
-                continue;
-            }
+    /*         if (Collision::broad_test(this->get_box(elapsed), entity->get_box())) { */
+    /*             auto dt_safe = Collision::narrow_test(this->get_box(elapsed), entity->get_box()); */
 
-            if (Collision::broad_test(this->get_box(elapsed), entity->get_box())) {
-                auto dt_safe = Collision::narrow_test(this->get_box(elapsed), entity->get_box());
+    /*             if (dt_safe == 0.f) { */
+    /*                 auto unpenetrate = Collision::get_penetration(this->get_box(), entity->get_box()); */
+    /*                 entity->move(unpenetrate); */
+    /*                 resolved = false; */
+    /*                 continue; */
+    /*             } else if (dt_safe < dt) { */
+    /*                 dt = dt_safe; */
+    /*             } */
+    /*         } */
+    /*     } */
+    /* } */
 
-                if (dt_safe == 0.f) {
-                    auto unpenetrate = Collision::get_penetration(this->get_box(), entity->get_box());
-                    entity->move(unpenetrate);
-                    resolved = false;
-                    continue;
-                } else if (dt_safe < dt) {
-                    dt = dt_safe;
-                }
-            }
-        }
-    }
+    /* move(get_velocity() * dt); */
 
-    move(get_velocity() * dt);
-
-    gun_.update(elapsed);
+    /* gun_.update(elapsed); */
 }
 
-const Graphics::Renderings
-Player::render()
-{
-    graphic_.setSize(get_dimensions());
-    graphic_.setOrigin(get_extents());
-    graphic_.setPosition(util::pixelate(get_position()));
-    graphic_.setFillColor(sf::Color::Blue);
+/* const Graphics::Renderings */
+/* Player::render() */
+/* { */
+/*     graphic_.setSize(get_dimensions()); */
+/*     graphic_.setOrigin(get_extents()); */
+/*     graphic_.setPosition(util::pixelate(get_position())); */
+/*     graphic_.setFillColor(sf::Color::Blue); */
 
-    const auto& gun_renderings = gun_.render();
+/*     const auto& gun_renderings = gun_.render(); */
 
-    Graphics::Renderings renderings;
-    renderings.reserve(1 + gun_renderings.size());
-    renderings.push_back(&graphic_);
-    renderings.insert(renderings.end(), gun_renderings.begin(), gun_renderings.end());
+/*     Graphics::Renderings renderings; */
+/*     renderings.reserve(1 + gun_renderings.size()); */
+/*     renderings.push_back(&graphic_); */
+/*     renderings.insert(renderings.end(), gun_renderings.begin(), gun_renderings.end()); */
 
-    return std::move(renderings);
-}
+/*     return std::move(renderings); */
+/* } */
 
 void
 Player::start_move(Direction direction)

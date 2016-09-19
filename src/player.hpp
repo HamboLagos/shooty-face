@@ -3,8 +3,8 @@
 #include <SFML/Graphics/RectangleShape.hpp>
 
 #include "entity.hpp"
-#include "gun.hpp"
-#include "graphics.hpp"
+/* #include "gun.hpp" */
+/* #include "graphics.hpp" */
 
 class Player : public Entity
 {
@@ -22,10 +22,11 @@ public:
     };
 
     Player();
+    virtual ~Player() = default;
 
     void update(sf::Time elapsed) override;
 
-    const Graphics::Renderings render();
+    /* const Graphics::Renderings render(); */
 
     /** \brief Apply velocity to the player in the given direction.
      *
@@ -39,7 +40,7 @@ public:
      * given direction, has no effect. */
     void stop_move(Direction direction);
 
-    Gun& get_gun() { return gun_; }
+    /* Gun& get_gun() { return gun_; } */
 
 private:
     sf::RectangleShape graphic_;

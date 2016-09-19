@@ -1,5 +1,7 @@
 #pragma once
 
+#include <gmock.h>
+
 #include "collision.hpp"
 
 class CollisionMock
@@ -10,8 +12,26 @@ public:
 
     static CollisionMock& instance()
     {
-        static CollisionMock mock;
+        static testing::NiceMock<CollisionMock> mock;
+
         return mock;
+    }
+
+    static void set_defaults()
+    {
+        using namespace testing;
+
+        ON_CALL(instance(), sanity_check(_, _)).WillByDefault(Return(false));
+        ON_CALL(instance(), broad_test(_, _)).WillByDefault(Return(false));
+        ON_CALL(instance(), narrow_test(_, _)).WillByDefault(Return(1.f));
+        ON_CALL(instance(), get_penetration(_, _)).WillByDefault(Return(sf::Vector2f(0.f, 0.f)));
+    }
+
+    static void clear_defaults()
+    {
+        using namespace testing;
+
+        Mock::VerifyAndClear(&instance());
     }
 
     MOCK_METHOD2(sanity_check, bool(const Entity&, const Entity&));
@@ -20,6 +40,7 @@ public:
     MOCK_METHOD2(get_penetration, sf::Vector2f(const AABB&, const AABB&));
 
 private:
+    friend class testing::NiceMock<CollisionMock>;
     CollisionMock() = default;
 };
 

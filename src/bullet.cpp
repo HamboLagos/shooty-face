@@ -1,6 +1,8 @@
 #include "bullet.hpp"
 
+#include "AI/AI_bullet.hpp"
 #include "collision.hpp"
+#include "components/AI.hpp"
 #include "components/health.hpp"
 #include "components/physics.hpp"
 #include "game.hpp"
@@ -8,6 +10,8 @@
 
 Bullet::Bullet()
 {
+    set_component<AI>(std::make_unique<AIBullet>(*this));
+
     auto* physics = add_component<Physics>();
     physics->set_dimensions({10.f, 10.f});
     physics->set_static(true);
@@ -29,33 +33,7 @@ Bullet::fire()
 void
 Bullet::update(sf::Time elapsed)
 {
-    float dt = elapsed.asSeconds();
-    auto box = get_component<Physics>()->get_box(dt);
-
-    for(const auto& entity : Game::instance().entities()) {
-        if (!Collision::sanity_check(*this, *entity)) {
-            continue;
-        }
-
-        auto entity_box = entity->get_component<Physics>()->get_box();
-
-        if (Collision::broad_test(box, entity_box))
-        {
-            float percent_safe = Collision::narrow_test(box, entity_box);
-            if (percent_safe < 1.f) {
-                if (entity->has_component<Health>()) {
-                    entity->get_component<Health>()->damage(DAMAGE);
-                }
-
-                get_component<Physics>()->update(dt * percent_safe);
-                kill();
-            }
-        }
-    }
-
-    if (is_alive()) {
-        get_component<Physics>()->update(dt);
-    }
+    get_component<AI>()->update(elapsed.asSeconds());
 }
 
 const Renderer::Renderings
@@ -73,6 +51,14 @@ Bullet::render()
     renderings.push_back(&graphic_);
 
     return std::move(renderings);
+}
+
+void
+Bullet::apply_damage(const Entity& entity)
+{
+    if (entity.has_component<Health>()) {
+        entity.get_component<Health>()->damage(DAMAGE);
+    }
 }
 
 Projectile*

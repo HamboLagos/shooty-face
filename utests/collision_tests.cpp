@@ -95,20 +95,33 @@ TEST_F(BroadAndNarrowTest, AlongXAxis)
     EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
 
     // again, but use an expanded state space
-    first_position_.x -= 1.f;
+    // moving towards each other
+    first_position_.x = 10.f;
     first_trajectory_.x = 1.f;
 
-    second_position_.x += 1.f;
+    second_position_.x = 13.f;
     second_trajectory_.x = -1.f;
     EXPECT_TRUE(Collision::broad_test(first(), second()));
     EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
 
-    // last case, broad phase passes but narrow fails
-    // second zooms past first, missing collision
-    second_position_.y += 10.f;
-    second_trajectory_.y = -100.f;
+    // moving in the same direction
+    first_trajectory_.x = 4.f;
+    second_trajectory_.x = 4.f;
     EXPECT_TRUE(Collision::broad_test(first(), second()));
     EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    // last case, broad phase passes but narrow fails
+    // second zooms past first, missing collision
+    first_trajectory_.x = 2.f;
+    second_trajectory_.x = 0.f;
+    second_position_.y = -2.f;
+    second_trajectory_.y = 8.1f; // seconds needs to move atleast 4.f in 0.5s == 8.f
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.y = 7.9f; // seconds needs to move atleast 4.f in 0.5s == 8.f
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
 }
 
 TEST_F(BroadAndNarrowTest, AlongYAxis)
@@ -137,20 +150,33 @@ TEST_F(BroadAndNarrowTest, AlongYAxis)
     EXPECT_FLOAT_EQ(0.f, Collision::narrow_test(first(), second()));
 
     // again, but use an expanded state space
-    first_position_.y -= 1.f;
+    // moving towards each other
+    first_position_.y = 10.f;
     first_trajectory_.y = 1.f;
 
-    second_position_.y += 1.f;
+    second_position_.y = 13.f;
     second_trajectory_.y = -1.f;
     EXPECT_TRUE(Collision::broad_test(first(), second()));
     EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
 
-    // last case, broad phase passes but narrow fails
-    // second zooms past first, missing collision
-    second_position_.x += 10.f;
-    second_trajectory_.x = -100.f;
+    // moving in the same direction
+    first_trajectory_.y = 4.f;
+    second_trajectory_.y = 4.f;
     EXPECT_TRUE(Collision::broad_test(first(), second()));
     EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    // last case, broad phase passes but narrow fails
+    // second zooms past first, missing collision
+    first_trajectory_.y = 2.f;
+    second_trajectory_.y = 0.f;
+    second_position_.x = -2.f;
+    second_trajectory_.x = 8.1f; // seconds needs to move atleast 4.f in 0.5s == 8.f
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(1.f, Collision::narrow_test(first(), second()));
+
+    second_trajectory_.x = 7.9f; // seconds needs to move atleast 4.f in 0.5s == 8.f
+    EXPECT_TRUE(Collision::broad_test(first(), second()));
+    EXPECT_FLOAT_EQ(0.5f, Collision::narrow_test(first(), second()));
 }
 
 TEST_F(BroadAndNarrowTest, FirstEncapsulatesSecond)

@@ -20,6 +20,8 @@ public:
     void update(sf::Time elapsed) override;
     const Renderings render() override;
 
+    void apply_damage(const Entity& entity);
+
 private:
     sf::CircleShape graphic_;
 };

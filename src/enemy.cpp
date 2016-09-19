@@ -1,89 +1,50 @@
-#include <functional>
-#include <iostream>
-
-#include "collision.hpp"
 #include "enemy.hpp"
-#include "game.hpp"
-#include "health.hpp"
+
+#include "AI/AI_enemy.hpp"
+#include "components/health.hpp"
+#include "components/physics.hpp"
 #include "utils.hpp"
-#include "graphics.hpp"
 
-Enemy::Enemy() :
-    is_fast_(false)
+Enemy::Enemy()
 {
-    auto* health = add_component<Health>();
-    health->on_death(std::bind(&Enemy::on_death, this));
+    set_component<AI>(std::make_unique<AIEnemy>(*this));
 
-    auto* graphics = add_component<Graphics>();
-    graphics->on_render(std::bind(&Enemy::render, this));
+    auto* physics = add_component<Physics>();
+    physics->set_dimensions({40.f, 40.f});
+    physics->set_move_speed(SPEED);
+
+    auto* graphics = set_component<Graphics>(std::make_unique<Graphics>(*this, *this));
+
+    add_component<Health>();
 }
 
 void
 Enemy::update(sf::Time elapsed)
 {
+    get_component<Health>()->update();
+
     if (is_dead()) {
         return;
     }
 
-    auto* player = Game::instance().get_player();
-    if (player == nullptr) {
-        return;
-    }
-
-    auto direction = util::direction(player->get_position() - get_position());
-    set_velocity(direction * (is_fast_ ? FAST_SPEED : SLOW_SPEED));
-
-    float dt = elapsed.asSeconds();
-    bool resolved = false;
-    for (int loops = 0; !resolved && loops < 8; ++loops) {
-        dt = elapsed.asSeconds();
-        resolved = true;
-
-        for(auto& entity : Game::instance().entities()) {
-            if (entity->is_passable() || entity.get() == this) {
-                continue;
-            }
-
-            if (Collision::broad_test(this->get_box(elapsed), entity->get_box())) {
-                auto dt_safe = Collision::narrow_test(this->get_box(), entity->get_box());
-
-                if (dt_safe == 0.f) {
-                    auto unpenetrate = -Collision::get_penetration(this->get_box(elapsed), entity->get_box());
-                    move(unpenetrate);
-                    resolved = false;
-                    continue;
-                } else if (dt_safe < dt) {
-                    dt = dt_safe;
-                }
-            }
-        }
-    }
-
-    move(get_velocity() * dt);
+    get_component<AI>()->update(elapsed.asSeconds());
 }
 
 const Graphics::Renderings
 Enemy::render()
 {
-    graphic_.setSize(get_dimensions());
-    graphic_.setOrigin(get_extents());
-    graphic_.setPosition(util::pixelate(get_position()));
+    auto* physics = get_component<Physics>();
+
+    graphic_.setSize(physics->get_dimensions());
+    graphic_.setOrigin(physics->get_extents());
+    graphic_.setPosition(util::pixelate(physics->get_position()));
     graphic_.setFillColor(sf::Color::Green);
     graphic_.setOutlineThickness(-1.f);
     graphic_.setOutlineColor(sf::Color::Black);
 
-    Graphics::Renderings renderings;
+    Renderings renderings;
     renderings.reserve(1);
     renderings.push_back(&graphic_);
 
     return std::move(renderings);
-
-    /* add_renderings(Health::render(get_position(), -(get_extents().y + 5.f))); */
-}
-
-void
-Enemy::on_death()
-{
-    std::cout << "I Die!" << std::endl;
-    set_alive(false);
 }
