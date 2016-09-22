@@ -15,7 +15,7 @@ public:
     { }
     virtual ~AIEnemy() = default;
 
-    void update(float dt) override;
+    sf::Time update(sf::Time elapsed) override;
 
     inline Enemy& get_enemy() { return static_cast<Enemy&>(get_entity()); }
 };

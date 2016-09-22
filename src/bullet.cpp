@@ -30,10 +30,10 @@ Bullet::fire()
     physics->set_static(false);
 }
 
-void
+sf::Time
 Bullet::update(sf::Time elapsed)
 {
-    get_component<AI>()->update(elapsed.asSeconds());
+    return get_component<AI>()->update(elapsed);
 }
 
 const Renderer::Renderings

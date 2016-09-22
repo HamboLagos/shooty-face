@@ -12,5 +12,5 @@ public:
     { }
     virtual ~AIMock() = default;
 
-    MOCK_METHOD1(update, void(float));
+    MOCK_METHOD1(update,  sf::Time(sf::Time));
 };

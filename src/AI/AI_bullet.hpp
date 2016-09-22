@@ -15,7 +15,7 @@ public:
     { }
     virtual ~AIBullet() = default;
 
-    void update(float dt) override;
+    sf::Time update(sf::Time elapsed) override;
 
     inline Bullet& get_bullet() { return static_cast<Bullet&>(get_entity()); }
 };

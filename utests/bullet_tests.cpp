@@ -72,7 +72,7 @@ protected:
 
 TEST_F(Update, DelegatesToAI)
 {
-    EXPECT_CALL(*ai_, update(0.5f));
+    EXPECT_CALL(*ai_, update(sf::seconds(0.5f)));
     sut.update(sf::seconds(0.5f));
 }
 

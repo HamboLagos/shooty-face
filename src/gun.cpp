@@ -27,7 +27,7 @@ Gun::reload()
     ammunition_->reload();
 }
 
-void
+sf::Time
 Gun::update(sf::Time elapsed)
 {
     // remove all the dead projectiles
@@ -40,6 +40,8 @@ Gun::update(sf::Time elapsed)
     for(auto& projectile : magazine_) {
         projectile->update(elapsed);
     }
+
+    return sf::Time::Zero;
 }
 
 const Graphics::Renderings

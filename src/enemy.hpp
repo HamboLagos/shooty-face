@@ -14,7 +14,7 @@ public:
     Enemy();
     virtual ~Enemy() = default;
 
-    void update(sf::Time elapsed) override;
+    sf::Time update(sf::Time elapsed) override;
     const Renderings render() override;
 
 private:

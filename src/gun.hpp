@@ -24,7 +24,7 @@ public:
     /** \brief Delegates to Ammunition::reload(). */
     void reload();
 
-    void update(sf::Time elapsed) override;
+    sf::Time update(sf::Time elapsed) override;
     const Graphics::Renderings render() override;
 
 private:

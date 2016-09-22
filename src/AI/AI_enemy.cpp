@@ -5,18 +5,18 @@
 #include "collision.hpp"
 #include "utils.hpp"
 
-void
-AIEnemy::update(float dt)
+sf::Time
+AIEnemy::update(sf::Time elapsed)
 {
     auto& enemy = get_enemy();
     if (enemy.is_dead()) {
-        return;
+        return sf::Time::Zero;
     }
 
     // attempt to track the player
     auto* player = Game::instance().get_player();
     if (player == nullptr) {
-        return;
+        return sf::Time::Zero;
     }
 
     auto* player_physics = player->get_component<Physics>();
@@ -26,7 +26,7 @@ AIEnemy::update(float dt)
 
     /// TODO allow sliding along entities to improve constistency of movement
     float min_percent_safe = 1.f;
-    auto enemy_box = enemy_physics->get_box(dt);
+    auto enemy_box = enemy_physics->get_box(elapsed.asSeconds());
     for(auto& entity : Game::instance().entities()) {
         if (!Collision::sanity_check(enemy, *entity)) {
             continue;
@@ -51,5 +51,7 @@ AIEnemy::update(float dt)
         }
     }
 
-    enemy_physics->update(dt * min_percent_safe);
+    enemy_physics->update(elapsed.asSeconds() * min_percent_safe);
+
+    return sf::Time::Zero;
 }

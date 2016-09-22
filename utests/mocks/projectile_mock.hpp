@@ -12,7 +12,7 @@ public:
     virtual ~ProjectileMock() = default;
 
     MOCK_METHOD0(fire, void(void));
-    MOCK_METHOD1(update, void(sf::Time));
+    MOCK_METHOD1(update, sf::Time(sf::Time));
     MOCK_METHOD0(render, const Renderings(void));
 };
 

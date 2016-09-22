@@ -22,7 +22,7 @@ public:
      *
      * Clients should set a target for the projectile first, via set_target().*/
     virtual void fire() = 0;
-    virtual void update(sf::Time elapsed) = 0;
+    virtual sf::Time update(sf::Time elapsed) = 0;
     virtual const Renderings render() = 0;
 
 private:

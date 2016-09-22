@@ -20,10 +20,21 @@ public:
 
     /** \brief Update this entity.
      *
-     * Typically called once per main-loop tick.
+     * Called once (or more) per main loop tick.
      *
-     * \param[in] dt Time delta to perform update over, decouples game logic from framerate. */
-    virtual void update(sf::Time elapsed) = 0;
+     * Entity should return the time delta used during this update calculation. The main loop will
+     * attempt to call update multipe times on this entity until it has used up the entire time
+     * delta for this frame. This simplifies the collision logic, allowing the entity to update
+     * until the nearest collision, then be to be called again to find the next nearest collision,
+     * and so on. This also decouples the retry attempts for an update for a given entity from the
+     * entity itself, so performance can be tweaked at a global scale.
+     *
+     * If the Entity is finished with its update (even before it has used the entire time delta
+     * allotted for this frame), it should return 0.
+     *
+     * \param[in] elapsed Time delta to perform update over, decouples game logic from framerate.
+     * \return Time delta used during this update calculation, or 0 if finished. */
+    virtual sf::Time update(sf::Time elapsed) = 0;
 
     /** \brief Checks if entity has the given component.
      *

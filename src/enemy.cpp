@@ -18,16 +18,16 @@ Enemy::Enemy()
     add_component<Health>();
 }
 
-void
+sf::Time
 Enemy::update(sf::Time elapsed)
 {
     get_component<Health>()->update();
 
     if (is_dead()) {
-        return;
+        return sf::Time::Zero;
     }
 
-    get_component<AI>()->update(elapsed.asSeconds());
+    return get_component<AI>()->update(elapsed);
 }
 
 const Graphics::Renderings

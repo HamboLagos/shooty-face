@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SFML/System/Time.hpp>
+
 #include "component.hpp"
 
 /** \brief AI is a virtual base class for all AI types. */
@@ -12,5 +14,5 @@ public:
     virtual ~AI() = default;
 
     /** \brief Perform AI control of this entity for the current frame. */
-    virtual void update(float dt) = 0;
+    virtual sf::Time update(sf::Time elapsed) = 0;
 };

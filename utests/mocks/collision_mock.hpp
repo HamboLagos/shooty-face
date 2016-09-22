@@ -12,8 +12,9 @@ public:
 
     static CollisionMock& instance()
     {
-        static testing::NiceMock<CollisionMock> mock;
+        using namespace testing;
 
+        static NiceMock<CollisionMock> mock;
         return mock;
     }
 

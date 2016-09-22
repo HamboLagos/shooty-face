@@ -4,7 +4,7 @@
 #include "entity.hpp"
 
 class StubEntity : public Entity {
-    void update(sf::Time elapsed) override { return; }
+    sf::Time update(sf::Time elapsed) override { return sf::Time::Zero; }
 };
 
 using namespace testing;

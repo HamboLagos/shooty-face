@@ -59,26 +59,26 @@ TEST_F(Update, TracksThePlayerPosition)
     auto* physics = enemy_.get_component<Physics>();
 
     // each call to update moves it towards the player
-    sut.update(0.5f);
+    sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(11.5f, 22.f), physics->get_position());
 
     // at the player
-    sut.update(0.5f);
+    sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(13.f, 24.f), physics->get_position());
 
     // stays at the player
-    sut.update(0.5f);
+    sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(13.f, 24.f), physics->get_position());
 
     // player moves, enemy tracks the new position
     player_->get_component<Physics>()->set_position(initial_position_);
-    sut.update(0.5f);
+    sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(11.5f, 22.f), physics->get_position());
 
-    sut.update(0.5f);
+    sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), physics->get_position());
 
-    sut.update(0.5f);
+    sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), physics->get_position());
 }
 
@@ -118,7 +118,7 @@ TEST_F(Collisions, WhenSanityCheckFails_DoesFullUpdate)
 {
     EXPECT_CALL(collision_, sanity_check(Ref(enemy_), Ref(*player_))).WillOnce(Return(false));
 
-    sut.update(1.f);
+    sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(13.f, 24.f), physics->get_position());
 }
 
@@ -128,7 +128,7 @@ TEST_F(Collisions, WhenBroadTestPasses_DoesFullUpdate)
 
     EXPECT_CALL(collision_, broad_test(_, _)).WillOnce(Return(false));
 
-    sut.update(1.f);
+    sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(13.f, 24.f), physics->get_position());
 }
 
@@ -139,7 +139,7 @@ TEST_F(Collisions, WhenNarrowTestPasses_DoesFullUpdate)
 
     EXPECT_CALL(collision_, narrow_test(_, _)).WillOnce(Return(1.f));
 
-    sut.update(1.f);
+    sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(13.f, 24.f), physics->get_position());
 }
 
@@ -150,7 +150,7 @@ TEST_F(Collisions, WhenNarrowTestGivesGT0LT1_DoesPartialUpdate)
 
     EXPECT_CALL(collision_, narrow_test(_, _)).WillOnce(Return(0.5f));
 
-    sut.update(1.f);
+    sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(11.5f, 22.f), physics->get_position());
 }
 
@@ -162,7 +162,7 @@ TEST_F(Collisions, WhenNarrowTestGives0_UsesResultsOfPenetrationTest)
     EXPECT_CALL(collision_, narrow_test(_, _)).WillOnce(Return(0.f));
     EXPECT_CALL(collision_, get_penetration(_, _)).WillOnce(Return(sf::Vector2f(1.f, 2.f)));
 
-    sut.update(1.f);
+    sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(9.f, 18.f), physics->get_position());
 }
 
@@ -212,7 +212,7 @@ TEST_F(MultiCollisions, WhenBothFailNarrowTest_UsesTheSmallerTimeDelta1)
     EXPECT_CALL(collision_, narrow_test(_, player_box)).WillOnce(Return(0.8f));
     EXPECT_CALL(collision_, narrow_test(_, entity_box)).WillOnce(Return(0.5f));
 
-    sut.update(1.f);
+    sut.update(sf::seconds(1.f));
     auto* physics = enemy_.get_component<Physics>();
     EXPECT_EQ(sf::Vector2f(11.5f, 22.f), physics->get_position());
 }
@@ -227,7 +227,7 @@ TEST_F(MultiCollisions, WhenBothFailNarrowTest_UsesTheSmallerTimeDelta2)
     EXPECT_CALL(collision_, narrow_test(_, player_box)).WillOnce(Return(0.8f));
     EXPECT_CALL(collision_, narrow_test(_, entity_box)).WillOnce(Return(0.5f));
 
-    sut.update(2.f);
+    sut.update(sf::seconds(2.f));
     auto* physics = enemy_.get_component<Physics>();
     EXPECT_EQ(sf::Vector2f(13.f, 24.f), physics->get_position());
 }
@@ -244,7 +244,7 @@ TEST_F(MultiCollisions, WhenBothFailNarrowTest_AndOneReturns0_UsesThePentrationM
     EXPECT_CALL(collision_, get_penetration(_, entity_box))
         .WillOnce(Return(sf::Vector2f(1.f, 2.f)));
 
-    sut.update(1.f);
+    sut.update(sf::seconds(1.f));
     auto* physics = enemy_.get_component<Physics>();
     EXPECT_EQ(sf::Vector2f(9.f, 18.f), physics->get_position());
 }

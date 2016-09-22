@@ -21,7 +21,7 @@ public:
     Player();
     virtual ~Player() = default;
 
-    void update(sf::Time elapsed) override;
+    sf::Time update(sf::Time elapsed) override;
     const Renderings render() override;
 
     /** \brief Apply velocity to the player in the given direction.

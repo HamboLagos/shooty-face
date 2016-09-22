@@ -11,9 +11,11 @@ Barrier::Barrier()
     set_component<Graphics>(std::make_unique<Graphics>(*this, *this));
 }
 
-void
+sf::Time
 Barrier::update(sf::Time elapsed)
-{ }
+{
+    return sf::Time::Zero;
+}
 
 const Renderer::Renderings
 Barrier::render()

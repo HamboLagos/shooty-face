@@ -7,5 +7,5 @@
 class EntityMock : public Entity
 {
 public:
-    MOCK_METHOD1(update, void(sf::Time));
+    MOCK_METHOD1(update, sf::Time(sf::Time));
 };

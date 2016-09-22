@@ -17,7 +17,7 @@ public:
     virtual ~Bullet() = default;
 
     void fire() override;
-    void update(sf::Time elapsed) override;
+    sf::Time update(sf::Time elapsed) override;
     const Renderings render() override;
 
     void apply_damage(const Entity& entity);

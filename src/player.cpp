@@ -14,7 +14,7 @@ Player::Player()
     physics->set_move_speed(SPEED);
 }
 
-void
+sf::Time
 Player::update(sf::Time elapsed)
 {
     float dx = 0.f;
@@ -62,6 +62,8 @@ Player::update(sf::Time elapsed)
     }
 
     physics->update(elapsed.asSeconds() * min_percent_safe);
+
+    return sf::Time::Zero;
 }
 
 const Renderer::Renderings
