@@ -1,5 +1,9 @@
 #pragma once
 
+#include <gmock.h>
+
+#include "components/AI.hpp"
+
 class AIMock : public AI
 {
 public:

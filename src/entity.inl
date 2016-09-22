@@ -4,7 +4,7 @@
 template<class T> constexpr void check_T();
 
 /** \brief Checks if the given T has a value set in the map. */
-template<class T> constexpr bool exists_in_map(const Entity::ComponentMap& map);
+template<class T> bool exists_in_map(const Entity::ComponentMap& map);
 
 /** \brief Maps from type T to a unique Key for the map. */
 template<class T> const Entity::ComponentMap::key_type key_from_T();
@@ -64,7 +64,7 @@ check_T()
     static_assert(std::is_base_of<Component, T>(), "Require Component Subclass");
 }
 
-template<class T> constexpr
+template<class T>
 bool exists_in_map(const Entity::ComponentMap& map)
 {
     return !!map.count(key_from_T<T>());

@@ -25,10 +25,13 @@ AIBullet::update(float dt)
         if (Collision::broad_test(bullet_box, entity_box)) {
             float percent_safe = Collision::narrow_test(bullet_box, entity_box);
 
+            /// TODO test for hitting multiple entities
+            /// TODO only apply damage to the first entity hit
             if (percent_safe < 1.f) {
                 bullet_physics->update(dt * percent_safe);
                 bullet.apply_damage(*entity);
                 bullet.kill();
+                break;
             }
         }
     }

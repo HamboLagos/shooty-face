@@ -2,17 +2,14 @@
 
 #include <SFML/Graphics/RectangleShape.hpp>
 
+#include "components/graphics.hpp"
 #include "entity.hpp"
-/* #include "gun.hpp" */
-/* #include "graphics.hpp" */
 
-class Player : public Entity
+class Player : public Entity, public Renderer
 {
-friend class TestablePlayer;
-
-static constexpr float SPEED = 250.f;
-
 public:
+    static constexpr float SPEED = 250.f;
+
     enum class Direction
     {
         RIGHT,
@@ -25,8 +22,7 @@ public:
     virtual ~Player() = default;
 
     void update(sf::Time elapsed) override;
-
-    /* const Graphics::Renderings render(); */
+    const Renderings render() override;
 
     /** \brief Apply velocity to the player in the given direction.
      *
@@ -40,12 +36,8 @@ public:
      * given direction, has no effect. */
     void stop_move(Direction direction);
 
-    /* Gun& get_gun() { return gun_; } */
-
 private:
     sf::RectangleShape graphic_;
-
-    /* Gun gun_; */
 
     struct MovementDirections
     {

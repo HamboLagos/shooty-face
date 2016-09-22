@@ -241,7 +241,8 @@ TEST_F(MultiCollisions, WhenBothFailNarrowTest_AndOneReturns0_UsesThePentrationM
     auto entity_box = entity_->get_component<Physics>()->get_box();
     EXPECT_CALL(collision_, narrow_test(_, player_box)).WillOnce(Return(0.8f));
     EXPECT_CALL(collision_, narrow_test(_, entity_box)).WillOnce(Return(0.0f));
-    EXPECT_CALL(collision_, get_penetration(_, entity_box)).WillOnce(Return(sf::Vector2f(1.f, 2.f)));
+    EXPECT_CALL(collision_, get_penetration(_, entity_box))
+        .WillOnce(Return(sf::Vector2f(1.f, 2.f)));
 
     sut.update(1.f);
     auto* physics = enemy_.get_component<Physics>();

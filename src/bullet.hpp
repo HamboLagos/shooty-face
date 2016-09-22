@@ -7,7 +7,7 @@
 #include "components/graphics.hpp"
 
 /** \brief Bullet is a automatic Projectile which fires in a straight line (like an uzi). */
-class Bullet : public Projectile, public Renderer
+class Bullet : public Projectile
 {
 public:
     static constexpr float SPEED = 750.f; ///< Bullet flight speed

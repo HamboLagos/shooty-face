@@ -1,18 +1,15 @@
 #include <iostream>
 
-#include <SFML/Graphics.hpp>
+#include "config.h"
 
+#include "components/graphics.hpp"
 #include "barrier.hpp"
 #include "bullet.hpp"
-#include "collision.hpp"
-#include "config.h"
 #include "enemy.hpp"
 #include "game.hpp"
-#include "health.hpp"
 #include "player.hpp"
 
 using namespace std;
-using Renderings = Graphics::Renderings;
 
 void add_renderings(Renderings& to, const Renderings& from)
 {

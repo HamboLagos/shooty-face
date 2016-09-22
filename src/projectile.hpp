@@ -1,11 +1,10 @@
 #pragma once
 
-#include <SFML/Graphics/Drawable.hpp>
-
 #include "entity.hpp"
+#include "components/graphics.hpp"
 
 /** \brief Base class for anything which can be shot from a gun. */
-class Projectile : public Entity
+class Projectile : public Entity, public Renderer
 {
 public:
     Projectile() = default;
@@ -23,8 +22,8 @@ public:
      *
      * Clients should set a target for the projectile first, via set_target().*/
     virtual void fire() = 0;
-
     virtual void update(sf::Time elapsed) = 0;
+    virtual const Renderings render() = 0;
 
 private:
     sf::Vector2f target_; ///< The target of this projectile
@@ -42,7 +41,8 @@ public:
     /** \brief Creates a new projectile.
      *
      * Callee assumes responsiblity of the returned projectile. We can't return a std::unique_ptr
-     * due to a limitation of GoogleMock requiring return values to be copy-assignable. */
+     * due to a limitation of GoogleMock requiring return values to be copy-assignable. This sucks,
+     * but the workarounds are kinda ugly, so we'll live with it. */
     virtual Projectile* create_projectile() = 0;
 
     /** \brief Prepares this ammunition for the next volley.

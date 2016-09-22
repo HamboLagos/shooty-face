@@ -1,4 +1,6 @@
-#include <gmock/gmock.h>
+#pragma once
+
+#include <gmock.h>
 
 #include "entity.hpp"
 

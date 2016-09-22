@@ -1,23 +1,17 @@
 #include "player.hpp"
-#include "utils.hpp"
+
 #include "collision.hpp"
-#include "game.hpp"
 #include "components/physics.hpp"
-
-#include <cmath>
-
-#include <iostream>
-
-/* Player::Player() : */
-/*     gun_(*this) */
-/* { */
-/*     auto* graphics = add_component<Graphics>(); */
-/*     graphics->on_render(std::bind(&Player::render, this)); */
-/* } */
+#include "game.hpp"
+#include "utils.hpp"
 
 Player::Player()
 {
-    add_component<Physics>();
+    set_component<Graphics>(std::make_unique<Graphics>(*this, *this));
+
+    auto* physics = add_component<Physics>();
+    physics->set_dimensions({100.f, 100.f});
+    physics->set_move_speed(SPEED);
 }
 
 void
@@ -39,56 +33,53 @@ Player::update(sf::Time elapsed)
     }
 
     auto direction = util::direction({dx, dy});
-    get_component<Physics>()->set_velocity(direction * SPEED);
+    auto* physics = get_component<Physics>();
+    physics->set_velocity(direction * physics->get_move_speed());
 
-    /* float dt = elapsed.asSeconds(); */
-    /* bool resolved = false; */
-    /* for (int loops = 0; !resolved && loops < 8; ++loops) { */
-    /*     dt = elapsed.asSeconds(); */
-    /*     resolved = true; */
+    float min_percent_safe = 1.f;
+    auto box = physics->get_box(elapsed.asSeconds());
+    for(auto& entity : Game::instance().entities()) {
+        if (!Collision::sanity_check(*this, *entity)) {
+            continue;
+        }
 
-    /*     for(auto& entity : Game::instance().entities()) { */
-    /*         if (entity->is_passable() || entity.get() == this) { */
-    /*             continue; */
-    /*         } */
+        auto entity_box = entity->get_component<Physics>()->get_box();
 
-    /*         if (Collision::broad_test(this->get_box(elapsed), entity->get_box())) { */
-    /*             auto dt_safe = Collision::narrow_test(this->get_box(elapsed), entity->get_box()); */
+        if (Collision::broad_test(box, entity_box)) {
+            float percent_safe = Collision::narrow_test(box, entity_box);
 
-    /*             if (dt_safe == 0.f) { */
-    /*                 auto unpenetrate = Collision::get_penetration(this->get_box(), entity->get_box()); */
-    /*                 entity->move(unpenetrate); */
-    /*                 resolved = false; */
-    /*                 continue; */
-    /*             } else if (dt_safe < dt) { */
-    /*                 dt = dt_safe; */
-    /*             } */
-    /*         } */
-    /*     } */
-    /* } */
+            if (percent_safe < 1.f) {
+                if (percent_safe == 0.f) {
+                    auto unpenetrate = Collision::get_penetration(box, entity_box);
+                    entity->get_component<Physics>()->move(unpenetrate);
+                }
 
-    /* move(get_velocity() * dt); */
+                if (percent_safe < min_percent_safe) {
+                    min_percent_safe = percent_safe;
+                }
+            }
+        }
+    }
 
-    /* gun_.update(elapsed); */
+    physics->update(elapsed.asSeconds() * min_percent_safe);
 }
 
-/* const Graphics::Renderings */
-/* Player::render() */
-/* { */
-/*     graphic_.setSize(get_dimensions()); */
-/*     graphic_.setOrigin(get_extents()); */
-/*     graphic_.setPosition(util::pixelate(get_position())); */
-/*     graphic_.setFillColor(sf::Color::Blue); */
+const Renderer::Renderings
+Player::render()
+{
+    auto* physics = get_component<Physics>();
 
-/*     const auto& gun_renderings = gun_.render(); */
+    graphic_.setSize(physics->get_dimensions());
+    graphic_.setOrigin(physics->get_extents());
+    graphic_.setPosition(util::pixelate(physics->get_position()));
+    graphic_.setFillColor(sf::Color::Blue);
 
-/*     Graphics::Renderings renderings; */
-/*     renderings.reserve(1 + gun_renderings.size()); */
-/*     renderings.push_back(&graphic_); */
-/*     renderings.insert(renderings.end(), gun_renderings.begin(), gun_renderings.end()); */
+    Renderings renderings;
+    renderings.reserve(1);
+    renderings.push_back(&graphic_);
 
-/*     return std::move(renderings); */
-/* } */
+    return std::move(renderings);
+}
 
 void
 Player::start_move(Direction direction)

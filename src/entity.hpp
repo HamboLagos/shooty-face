@@ -8,7 +8,7 @@
 
 #include "components/component.hpp"
 
-/** \brief Entity is a base for things which have dimension. */
+/** \brief An Entitiy is a container class for components. */
 class Entity {
 public:
     using ComponentMap = std::unordered_map<std::type_index, std::unique_ptr<Component>>;
@@ -16,10 +16,18 @@ public:
     Entity() :
         is_alive_(true)
     { }
-
     virtual ~Entity() = default;
 
-    /** \brief Checks if entity has the given component, and its not nullptr. */
+    /** \brief Update this entity.
+     *
+     * Typically called once per main-loop tick.
+     *
+     * \param[in] dt Time delta to perform update over, decouples game logic from framerate. */
+    virtual void update(sf::Time elapsed) = 0;
+
+    /** \brief Checks if entity has the given component.
+     *
+     * \return true iff this entity has the given component set, and its not nullptr. */
     template<class T> bool has_component() const;
 
     /** \brief Default constructs a new component for this entity.
@@ -45,13 +53,6 @@ public:
      *
      * \return The given component for this entity, or nullptr if it doesn't have one. */
     template<class T> T* get_component() const;
-
-    /** \brief Update this entity.
-     *
-     * Typically called once per main-loop tick.
-     *
-     * \param[in] dt Time delta to perform update over, decouples game logic from framerate. */
-    virtual void update(sf::Time elapsed) = 0;
 
     inline void set_alive(bool is_alive) { is_alive_ = is_alive; }
     inline void kill() { is_alive_ = false; }

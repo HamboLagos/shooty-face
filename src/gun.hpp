@@ -4,10 +4,10 @@
 
 #include "entity.hpp"
 #include "projectile.hpp"
-#include "graphics.hpp"
+#include "components/graphics.hpp"
 
 /** \brief Gun is a composite class of projectiles, which uses a set Ammunition factory. */
-class Gun
+class Gun : public Entity, public Renderer
 {
 public:
     using Magazine = std::vector<std::unique_ptr<Projectile>>;
@@ -18,31 +18,14 @@ public:
     /** \brief Set the ammunition type for this gun. */
     inline void set_ammunition(std::unique_ptr<Ammunition> ammo) { ammunition_ = std::move(ammo); }
 
-    /** \brief Test Method, returns the ammunition loaded in this gun. */
-    inline Ammunition* get_ammunition() const { return ammunition_.get(); }
-
-    /** \brief Returns the live projectiles tracked by this gun. */
-    inline Magazine& get_magazine() { return magazine_; }
-
-    /** \brief Fire a projectile of the set ammunition type at the given target.
-     *
-     * Automatic vs. Semiautomatic operation is determined by the ammunition type. */
+    /** \brief Fire a projectile of the set ammunition type at the given target. */
     void fire(sf::Vector2f target);
 
-    /** \brief Prepare for the next volley.
-     *
-     * Automatic vs. Semiautomatic operation is determined by the ammunition type. */
+    /** \brief Delegates to Ammunition::reload(). */
     void reload();
 
-    /** \brief Update this gun.
-     *
-     * Delegates updates to each of the live projectiles. */
-    void update(sf::Time elapsed);
-
-    /** \brief Render this gun.
-     *
-     * Delegates and collects the renderings from each of the live projectiles. */
-    const Graphics::Renderings render();
+    void update(sf::Time elapsed) override;
+    const Graphics::Renderings render() override;
 
 private:
     const Entity& operator_; ///< The entity operating this gun
@@ -50,4 +33,7 @@ private:
     std::unique_ptr<Ammunition> ammunition_; ///< Ammunition type used for next fire()
 
     Magazine magazine_; ///< The projectiles this gun tracks
+
+    // Test Methods
+    friend class TestableGun;
 };

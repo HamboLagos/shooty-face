@@ -1,16 +1,20 @@
 #include "gun.hpp"
-#include "bullet.hpp"
+
+#include "components/physics.hpp"
 
 Gun::Gun(const Entity& the_operator) :
     operator_(the_operator)
-{ }
+{
+    set_component<Graphics>(std::make_unique<Graphics>(*this, *this));
+}
 
 void
 Gun::fire(sf::Vector2f target)
 {
     auto projectile = ammunition_->create_projectile();
     if (projectile) {
-        projectile->set_position(operator_.get_position());
+        auto position = operator_.get_component<Physics>()->get_position();
+        projectile->get_component<Physics>()->set_position(position);
         projectile->set_target(target);
         projectile->fire();
         magazine_.emplace_back(projectile);
@@ -45,8 +49,9 @@ Gun::render()
     renderings.reserve(magazine_.size());
 
     for(auto& projectile : magazine_) {
-        renderings.push_back(projectile->render());
+        const auto& projectile_renderings = projectile->render();
+        renderings.insert(renderings.end(), projectile_renderings.begin(), projectile_renderings.end());
     }
 
-    return renderings;
+    return std::move(renderings);
 }

@@ -8,6 +8,7 @@
 #include "components/health.hpp"
 #include "components/physics.hpp"
 #include "mocks/collision_mock.hpp"
+#include "mocks/ai_mock.hpp"
 
 using namespace testing;
 
@@ -35,7 +36,6 @@ TEST_F(Components, Physics_SetsDefaults)
 
 TEST_F(Components, Graphics_ReturnsARectangleForThisEnemy)
 {
-
     auto* physics = sut.get_component<Physics>();
 
     physics->set_position({100.1f, 200.2f});
@@ -48,14 +48,25 @@ TEST_F(Components, Graphics_ReturnsARectangleForThisEnemy)
     EXPECT_EQ(sf::Vector2f(10.1f, 20.2f), graphic->getSize());
 }
 
-/// TODO
-class Render : public TestableEnemy { };
+class Update : public TestableEnemy
+{
+protected:
+    AIMock* ai_;
 
-/// TODO
-class Update : public TestableEnemy { };
+    Update() :
+        ai_(new AIMock(sut))
+    {
+        sut.set_component<AI>(std::unique_ptr<AI>(ai_));
+    }
+};
 
 TEST_F(Update, DelegatesToAI)
 {
-    // if dead, no delegation
-    // else, delegates to AI
+    EXPECT_CALL(*ai_, update(0.5f));
+    sut.update(sf::seconds(0.5f));
+
+    sut.kill();
+
+    EXPECT_CALL(*ai_, update(_)).Times(0);
+    sut.update(sf::seconds(0.5f));
 }

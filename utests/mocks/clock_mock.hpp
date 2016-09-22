@@ -1,3 +1,7 @@
+#pragma once
+
+#include <gmock.h>
+
 #include "clock.hpp"
 
 class ClockMock : public ClockIF
