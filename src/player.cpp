@@ -10,7 +10,7 @@ Player::Player()
     set_component<Graphics>(std::make_unique<Graphics>(*this, *this));
 
     auto* physics = add_component<Physics>();
-    physics->set_dimensions({100.f, 100.f});
+    physics->set_dimensions({20.f, 20.f});
     physics->set_move_speed(SPEED);
 }
 

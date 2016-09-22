@@ -24,6 +24,7 @@ AIEnemy::update(float dt)
     auto dir = util::direction(player_physics->get_position() - enemy_physics->get_position());
     enemy_physics->set_velocity(dir * enemy_physics->get_move_speed());
 
+    /// TODO allow sliding along entities to improve constistency of movement
     float min_percent_safe = 1.f;
     auto enemy_box = enemy_physics->get_box(dt);
     for(auto& entity : Game::instance().entities()) {

@@ -1,17 +1,23 @@
 #include <iostream>
 
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Event.hpp>
+
 #include "config.h"
 
-#include "components/graphics.hpp"
-#include "barrier.hpp"
-#include "bullet.hpp"
-#include "enemy.hpp"
 #include "game.hpp"
 #include "player.hpp"
+#include "gun.hpp"
+#include "bullet.hpp"
+#include "barrier.hpp"
+#include "enemy.hpp"
+
+#include "components/physics.hpp"
+#include "components/health.hpp"
 
 using namespace std;
 
-void add_renderings(Renderings& to, const Renderings& from)
+void add_renderings(Renderer::Renderings& to, const Renderer::Renderings& from)
 {
     to.insert(to.end(), from.begin(), from.end());
 }
@@ -31,10 +37,12 @@ int main(int argc, char *argv[])
     sf::RenderWindow app(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Shooty Face");
     app.setFramerateLimit(250);
 
-    auto* player = game.add_player();
-    player->set_dimensions({20.f, 20.f});
-    player->set_position(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT)/2.f);
-    player->get_gun().set_ammunition(std::make_unique<Bullet>());
+    auto& player = *game.add_player();
+    player.get_component<Physics>()->set_position(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT)/2.f);
+
+    game.entity_collection().push_back(std::make_unique<Gun>(player));
+    Gun& gun = static_cast<Gun&>(*game.entity_collection().back().get());
+    gun.set_ammunition(std::make_unique<BulletAmmunition>());
 
     std::vector<Barrier*> barriers(4); ///< top, left, bottom, right
     for(auto& barrier : barriers) {
@@ -43,14 +51,14 @@ int main(int argc, char *argv[])
     }
 
     float border_thickness = 20.f;
-    barriers[0]->set_position({WINDOW_WIDTH/2.f, border_thickness/2.f});
-    barriers[0]->set_dimensions({WINDOW_WIDTH, border_thickness});
-    barriers[1]->set_position({border_thickness/2.f, WINDOW_HEIGHT/2.f});
-    barriers[1]->set_dimensions({border_thickness, WINDOW_HEIGHT});
-    barriers[2]->set_position({WINDOW_WIDTH/2.f, WINDOW_HEIGHT - border_thickness/2.f});
-    barriers[2]->set_dimensions({WINDOW_WIDTH, border_thickness});
-    barriers[3]->set_position({WINDOW_WIDTH - border_thickness/2.f, WINDOW_HEIGHT/2.f});
-    barriers[3]->set_dimensions({border_thickness, WINDOW_HEIGHT});
+    barriers[0]->get_component<Physics>()->set_position({WINDOW_WIDTH/2.f, border_thickness/2.f});
+    barriers[0]->get_component<Physics>()->set_dimensions({WINDOW_WIDTH, border_thickness});
+    barriers[1]->get_component<Physics>()->set_position({border_thickness/2.f, WINDOW_HEIGHT/2.f});
+    barriers[1]->get_component<Physics>()->set_dimensions({border_thickness, WINDOW_HEIGHT});
+    barriers[2]->get_component<Physics>()->set_position({WINDOW_WIDTH/2.f, WINDOW_HEIGHT - border_thickness/2.f});
+    barriers[2]->get_component<Physics>()->set_dimensions({WINDOW_WIDTH, border_thickness});
+    barriers[3]->get_component<Physics>()->set_position({WINDOW_WIDTH - border_thickness/2.f, WINDOW_HEIGHT/2.f});
+    barriers[3]->get_component<Physics>()->set_dimensions({border_thickness, WINDOW_HEIGHT});
 
     barriers.clear();
 
@@ -58,51 +66,51 @@ int main(int argc, char *argv[])
     int ndx = 0;
     for(auto& enemy : enemies) {
         enemy = new Enemy();
-        if (ndx++ <= 3) {
-            enemy->set_fast();
-        } else {
-            enemy->set_slow();
-            enemy->get_component<Health>()->set_health(15.f);
-        }
+        enemy->get_component<Health>()->set_health(15.f);
+
+        /* auto* physics = enemy->get_component<Physics>(); */
+        /* if (ndx++ <= 3) { */
+        /*     physics->set_move_speed(physics->get_move_speed() * 2.f); */
+        /* } */
 
         game.entity_collection().emplace_back(enemy);
     }
 
 
-    sf::Vector2f zero_offset = {border_thickness + enemies[0]->get_extents().x,
-                                border_thickness + enemies[0]->get_extents().y};
-    enemies[0]->set_position({zero_offset.x, zero_offset.y});
-    enemies[1]->set_position({zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
-    enemies[2]->set_position({WINDOW_WIDTH - zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
-    enemies[3]->set_position({WINDOW_WIDTH - zero_offset.x, zero_offset.y});
+    sf::Vector2f zero_offset = {border_thickness + enemies[0]->get_component<Physics>()->get_extents().x,
+                                border_thickness + enemies[0]->get_component<Physics>()->get_extents().y};
+    enemies[0]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
+    enemies[1]->get_component<Physics>()->set_position({zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
+    enemies[2]->get_component<Physics>()->set_position({WINDOW_WIDTH - zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
+    enemies[3]->get_component<Physics>()->set_position({WINDOW_WIDTH - zero_offset.x, zero_offset.y});
 
     zero_offset = {WINDOW_WIDTH/2.f, WINDOW_HEIGHT/4.f};
-    enemies[4]->set_position({zero_offset.x - WINDOW_WIDTH/16.f, zero_offset.y});
-    enemies[5]->set_position({zero_offset.x - WINDOW_WIDTH/8.f, zero_offset.y});
-    enemies[6]->set_position({zero_offset.x, zero_offset.y});
-    enemies[7]->set_position({zero_offset.x + WINDOW_WIDTH/8.f, zero_offset.y});
-    enemies[8]->set_position({zero_offset.x + WINDOW_WIDTH/16.f, zero_offset.y});
+    enemies[4]->get_component<Physics>()->set_position({zero_offset.x - WINDOW_WIDTH/16.f, zero_offset.y});
+    enemies[5]->get_component<Physics>()->set_position({zero_offset.x - WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[6]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
+    enemies[7]->get_component<Physics>()->set_position({zero_offset.x + WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[8]->get_component<Physics>()->set_position({zero_offset.x + WINDOW_WIDTH/16.f, zero_offset.y});
 
     zero_offset = {WINDOW_WIDTH/4.f, WINDOW_HEIGHT/2.f};
-    enemies[9]->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/16.f});
-    enemies[10]->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/8.f});
-    enemies[11]->set_position({zero_offset.x, zero_offset.y});
-    enemies[12]->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/8.f});
-    enemies[13]->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/16.f});
+    enemies[9]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/16.f});
+    enemies[10]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/8.f});
+    enemies[11]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
+    enemies[12]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/8.f});
+    enemies[13]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/16.f});
 
     zero_offset = {WINDOW_WIDTH/2.f, WINDOW_HEIGHT*3.f/4.f};
-    enemies[14]->set_position({zero_offset.x - WINDOW_WIDTH/16.f, zero_offset.y});
-    enemies[15]->set_position({zero_offset.x - WINDOW_WIDTH/8.f, zero_offset.y});
-    enemies[16]->set_position({zero_offset.x, zero_offset.y});
-    enemies[17]->set_position({zero_offset.x + WINDOW_WIDTH/8.f, zero_offset.y});
-    enemies[18]->set_position({zero_offset.x + WINDOW_WIDTH/16.f, zero_offset.y});
+    enemies[14]->get_component<Physics>()->set_position({zero_offset.x - WINDOW_WIDTH/16.f, zero_offset.y});
+    enemies[15]->get_component<Physics>()->set_position({zero_offset.x - WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[16]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
+    enemies[17]->get_component<Physics>()->set_position({zero_offset.x + WINDOW_WIDTH/8.f, zero_offset.y});
+    enemies[18]->get_component<Physics>()->set_position({zero_offset.x + WINDOW_WIDTH/16.f, zero_offset.y});
 
     zero_offset = {WINDOW_WIDTH*3.f/4.f, WINDOW_HEIGHT/2.f};
-    enemies[19]->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/16.f});
-    enemies[20]->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/8.f});
-    enemies[21]->set_position({zero_offset.x, zero_offset.y});
-    enemies[22]->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/8.f});
-    enemies[23]->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/16.f});
+    enemies[19]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/16.f});
+    enemies[20]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y - WINDOW_HEIGHT/8.f});
+    enemies[21]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
+    enemies[22]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/8.f});
+    enemies[23]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y + WINDOW_HEIGHT/16.f});
 
     enemies.clear();
 
@@ -122,21 +130,27 @@ int main(int argc, char *argv[])
             case sf::Event::KeyReleased:
 
                 switch (event.key.code) {
+
                 case sf::Keyboard::Escape:
                     app.close();
                     break;
+
                 case sf::Keyboard::W:
-                    player->stop_move(Player::Direction::UP);
+                    player.stop_move(Player::Direction::UP);
                     break;
+
                 case sf::Keyboard::A:
-                    player->stop_move(Player::Direction::LEFT);
+                    player.stop_move(Player::Direction::LEFT);
                     break;
+
                 case sf::Keyboard::S:
-                    player->stop_move(Player::Direction::DOWN);
+                    player.stop_move(Player::Direction::DOWN);
                     break;
+
                 case sf::Keyboard::D:
-                    player->stop_move(Player::Direction::RIGHT);
+                    player.stop_move(Player::Direction::RIGHT);
                     break;
+
                 default:
                     break;
                 }
@@ -145,25 +159,30 @@ int main(int argc, char *argv[])
             case sf::Event::KeyPressed:
 
                 switch (event.key.code) {
+
                 case sf::Keyboard::W:
-                    player->start_move(Player::Direction::UP);
+                    player.start_move(Player::Direction::UP);
                     break;
+
                 case sf::Keyboard::A:
-                    player->start_move(Player::Direction::LEFT);
+                    player.start_move(Player::Direction::LEFT);
                     break;
+
                 case sf::Keyboard::S:
-                    player->start_move(Player::Direction::DOWN);
+                    player.start_move(Player::Direction::DOWN);
                     break;
+
                 case sf::Keyboard::D:
-                    player->start_move(Player::Direction::RIGHT);
+                    player.start_move(Player::Direction::RIGHT);
                     break;
+
                 default:
                     break;
                 }
                 break;
 
             case sf::Event::MouseButtonReleased:
-                player->get_gun().reload();
+                gun.reload();
                 break;
 
             default:
@@ -173,7 +192,7 @@ int main(int argc, char *argv[])
 
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
             auto target = sf::Mouse::getPosition(app);
-            player->get_gun().fire(sf::Vector2f(target));
+            gun.fire(sf::Vector2f(target));
         }
 
         /* static int last_projectile_count = 0; */

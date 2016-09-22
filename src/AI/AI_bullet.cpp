@@ -16,6 +16,11 @@ AIBullet::update(float dt)
     auto bullet_box = bullet_physics->get_box(dt);
 
     for(const auto& entity : Game::instance().entities()) {
+        /// TODO Add tests for this check
+        if (entity.get() == Game::instance().get_player()) {
+            continue;
+        }
+
         if (!Collision::sanity_check(bullet, *entity)) {
             continue;
         }
