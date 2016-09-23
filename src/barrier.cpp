@@ -14,7 +14,7 @@ Barrier::Barrier()
 sf::Time
 Barrier::update(sf::Time elapsed)
 {
-    return sf::Time::Zero;
+    return elapsed;
 }
 
 const Renderer::Renderings

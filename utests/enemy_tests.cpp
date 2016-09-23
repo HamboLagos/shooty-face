@@ -62,11 +62,7 @@ protected:
 
 TEST_F(Update, DelegatesToAI)
 {
-    EXPECT_CALL(*ai_, update(sf::seconds(0.5f)));
-    sut.update(sf::seconds(0.5f));
-
-    sut.kill();
-
-    EXPECT_CALL(*ai_, update(_)).Times(0);
-    sut.update(sf::seconds(0.5f));
+    EXPECT_CALL(*ai_, update(sf::seconds(0.5f))).WillOnce(Return(sf::seconds(0.5f)));
+    auto ret = sut.update(sf::seconds(0.5f));
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }

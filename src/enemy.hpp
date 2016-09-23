@@ -14,7 +14,10 @@ public:
     Enemy();
     virtual ~Enemy() = default;
 
+    void refresh(sf::Time frame_length) override;
     sf::Time update(sf::Time elapsed) override;
+    void flush() override;
+
     const Renderings render() override;
 
 private:

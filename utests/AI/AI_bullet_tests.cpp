@@ -51,21 +51,25 @@ TEST_F(Update, BulletProceedsInLinearTrajectoryThroughTarget)
     EXPECT_EQ(sf::Vector2f(3.f, 4.f), physics->get_velocity());
 
     // each call to update moves it along the trajectory
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(11.5f, 22.f), physics->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     // at the target point
-    sut.update(sf::seconds(0.5f));
+    ret = sut.update(sf::seconds(0.5f));
     EXPECT_EQ(sf::Vector2f(13.f, 24.f), physics->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     // travels through the target point
-    sut.update(sf::seconds(1.f));
+    ret = sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(16.f, 28.f), physics->get_position());
+    EXPECT_EQ(sf::seconds(1.f), ret);
 
     // until it dies
     bullet_.kill();
-    sut.update(sf::seconds(1.f));
+    ret = sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(16.f, 28.f), physics->get_position());
+    EXPECT_EQ(sf::seconds(1.f), ret);
 }
 
 class Collisions : public TestableAIBullet
@@ -107,9 +111,10 @@ TEST_F(Collisions, WhenSanityCheckFails_DoesFullUpdate)
 {
     EXPECT_CALL(collision_, sanity_check(Ref(bullet_), Ref(*entity_))).WillOnce(Return(false));
 
-    sut.update(sf::seconds(2.f));
+    auto ret = sut.update(sf::seconds(2.f));
     EXPECT_TRUE(bullet_.is_alive());
     EXPECT_EQ(sf::Vector2f(18.f, 10.f), bullet_.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(2.f), ret);
 }
 
 TEST_F(Collisions, WhenBroadTestPasses_DoesFullUpdate)
@@ -119,9 +124,10 @@ TEST_F(Collisions, WhenBroadTestPasses_DoesFullUpdate)
     auto box = bullet_.get_component<Physics>()->get_box(2.f);
     EXPECT_CALL(collision_, broad_test(box, _)).WillOnce(Return(false));
 
-    sut.update(sf::seconds(2.f));
+    auto ret = sut.update(sf::seconds(2.f));
     EXPECT_TRUE(bullet_.is_alive());
     EXPECT_EQ(sf::Vector2f(18.f, 10.f), bullet_.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(2.f), ret);
 }
 
 TEST_F(Collisions, WhenNarrowTestPasses_DoesFullUpdate)
@@ -133,9 +139,10 @@ TEST_F(Collisions, WhenNarrowTestPasses_DoesFullUpdate)
 
     EXPECT_CALL(collision_, narrow_test(box, _)).WillOnce(Return(1.f));
 
-    sut.update(sf::seconds(2.f));
+    auto ret = sut.update(sf::seconds(2.f));
     EXPECT_TRUE(bullet_.is_alive());
     EXPECT_EQ(sf::Vector2f(18.f, 10.f), bullet_.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(2.f), ret);
 }
 
 TEST_F(Collisions, WhenNarrowTestGivesGT0LT1_DoesPartialUpdate_ThenDamagesEntity)
@@ -149,7 +156,9 @@ TEST_F(Collisions, WhenNarrowTestGivesGT0LT1_DoesPartialUpdate_ThenDamagesEntity
 
     EXPECT_CALL(collision_, narrow_test(box, _)).WillOnce(Return(0.5f));
 
-    sut.update(sf::seconds(2.f));
+    auto ret = sut.update(sf::seconds(2.f));
+    EXPECT_EQ(sf::seconds(1.f), ret);
+
     EXPECT_TRUE(bullet_.is_dead());
     EXPECT_EQ(sf::Vector2f(14.f, 10.f), bullet_.get_component<Physics>()->get_position());
 
@@ -167,7 +176,9 @@ TEST_F(Collisions, WhenNarrowTestGives0_DamagesTheEntity)
 
     EXPECT_CALL(collision_, narrow_test(box, _)).WillOnce(Return(0.f));
 
-    sut.update(sf::seconds(2.f));
+    auto ret = sut.update(sf::seconds(2.f));
+    EXPECT_EQ(sf::seconds(0.f), ret);
+
     EXPECT_TRUE(bullet_.is_dead());
     EXPECT_EQ(sf::Vector2f(10.f, 10.f), bullet_.get_component<Physics>()->get_position());
 
@@ -226,7 +237,8 @@ TEST_F(MultiCollisions, SkipsCollisionsWithThePlayer)
     // player gets skipped:
     // EXPECT_CALL(collision_, sanity_check(Ref(bullet_), Ref(player_)));
 
-    sut.update(sf::seconds(2.f));
+    auto ret = sut.update(sf::seconds(2.f));
+    EXPECT_EQ(sf::seconds(2.f), ret);
 }
 
 TEST_F(MultiCollisions, OnlyDamagesTheFirstEntityItHits)
@@ -239,7 +251,8 @@ TEST_F(MultiCollisions, OnlyDamagesTheFirstEntityItHits)
     EXPECT_CALL(collision_, narrow_test(_, box1)).WillOnce(Return(0.8f));
     EXPECT_CALL(collision_, narrow_test(_, box2)).WillOnce(Return(0.5f));
 
-    sut.update(sf::seconds(2.f));
+    auto ret = sut.update(sf::seconds(2.f));
+    EXPECT_EQ(sf::seconds(1.f), ret);
 
     EXPECT_EQ(50.f, entity1_->get_component<Health>()->get_health());
     EXPECT_EQ(50.f-Bullet::DAMAGE, entity2_->get_component<Health>()->get_health());

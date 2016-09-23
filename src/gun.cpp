@@ -41,7 +41,7 @@ Gun::update(sf::Time elapsed)
         projectile->update(elapsed);
     }
 
-    return sf::Time::Zero;
+    return elapsed;
 }
 
 const Graphics::Renderings

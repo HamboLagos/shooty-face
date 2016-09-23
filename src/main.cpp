@@ -68,10 +68,11 @@ int main(int argc, char *argv[])
         enemy = new Enemy();
         enemy->get_component<Health>()->set_health(15.f);
 
-        /* auto* physics = enemy->get_component<Physics>(); */
-        /* if (ndx++ <= 3) { */
-        /*     physics->set_move_speed(physics->get_move_speed() * 2.f); */
-        /* } */
+        auto* physics = enemy->get_component<Physics>();
+        if (ndx++ <= 3) {
+            physics->set_move_speed(physics->get_move_speed() * 1.5f);
+            physics->set_dimensions(physics->get_dimensions() * 1.5f);
+        }
 
         game.entity_collection().emplace_back(enemy);
     }
@@ -114,10 +115,8 @@ int main(int argc, char *argv[])
 
     enemies.clear();
 
-    sf::Clock clock;
     while (app.isOpen()) {
-
-        sf::Time elapsed = clock.restart();
+        static sf::Clock clock;
 
         sf::Event event;
         while (app.pollEvent(event)) {
@@ -196,14 +195,34 @@ int main(int argc, char *argv[])
         }
 
         /* static int last_projectile_count = 0; */
-        /* int projectile_count = player->get_gun().get_magazine().size(); */
+        /* int projectile_count = gun.get_magazine().size(); */
         /* if (last_projectile_count != projectile_count) { */
         /*     last_projectile_count = projectile_count; */
         /*     std::cout << "Projectile Count: " << projectile_count << std::endl; */
         /* } */
 
+        auto frame_length = clock.restart();
+
         for(auto& entity : game.entities()) {
-            entity->update(elapsed);
+            entity->refresh(frame_length);
+
+            auto remaining = frame_length;
+            int loops = 2;
+            bool did_portal = false;
+            while(remaining > sf::Time::Zero && loops--)
+            {
+                auto used = entity->update(remaining);
+                remaining -= used;
+
+                // allow one extra retry for a "portal" move
+                // ie. entity is trying to unstick itself from something
+                if (used == sf::Time::Zero && !did_portal) {
+                    did_portal = true;
+                    ++loops;
+                }
+            }
+
+            entity->flush();
         }
 
         /* int entity_count = game.entities().size(); */
@@ -215,7 +234,6 @@ int main(int argc, char *argv[])
             collection.end());
 
         /* int delta_entities = entity_count - collection.size(); */
-
         /* if (delta_entities != 0) { */
         /*     std::cout << */
         /*         "Size: " << */

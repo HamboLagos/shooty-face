@@ -75,65 +75,73 @@ const float Movement::move_speed_               = 10.f;
 TEST_F(Movement, StartMoveBeginsAVelocityChange)
 {
     sut.start_move(Player::Direction::DOWN);
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::DOWN);
 
     EXPECT_EQ(sf::Vector2f(10.f, 25.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     sut.start_move(Player::Direction::UP);
-    sut.update(sf::seconds(0.5f));
+    ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::UP);
 
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     sut.start_move(Player::Direction::RIGHT);
-    sut.update(sf::seconds(0.5f));
+    ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::RIGHT);
 
     EXPECT_EQ(sf::Vector2f(15.f, 20.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     sut.start_move(Player::Direction::LEFT);
-    sut.update(sf::seconds(0.5f));
+    ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::LEFT);
 
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     // along the diagonals
     auto distance = util::direction(sf::Vector2f(1.f, 1.f)) * move_speed_ * 0.5f;
     sut.start_move(Player::Direction::DOWN);
     sut.start_move(Player::Direction::RIGHT);
-    sut.update(sf::seconds(0.5f));
+    ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::DOWN);
     sut.stop_move(Player::Direction::RIGHT);
 
     EXPECT_EQ(sf::Vector2f(10.f, 20.f) + distance, sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     sut.start_move(Player::Direction::UP);
     sut.start_move(Player::Direction::LEFT);
-    sut.update(sf::seconds(0.5f));
+    ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::UP);
     sut.stop_move(Player::Direction::LEFT);
 
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }
 
 TEST_F(Movement, StartMoveInOppositeDirectionsCancelEachOther)
 {
     sut.start_move(Player::Direction::LEFT);
     sut.start_move(Player::Direction::RIGHT);
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::LEFT);
     sut.stop_move(Player::Direction::RIGHT);
 
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     sut.start_move(Player::Direction::UP);
     sut.start_move(Player::Direction::DOWN);
-    sut.update(sf::seconds(0.5f));
+    ret = sut.update(sf::seconds(0.5f));
     sut.stop_move(Player::Direction::UP);
     sut.stop_move(Player::Direction::DOWN);
 
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }
 
 class Collisions : public TestablePlayer
@@ -167,9 +175,10 @@ const float Collisions::speed_                   = 10.f;
 TEST_F(Collisions, WhenSanityCheckFails_DoesFullUpdate)
 {
     EXPECT_CALL(collision_, sanity_check(Ref(sut), Ref(*entity_))).WillOnce(Return(false));
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
 
     EXPECT_EQ(sf::Vector2f(10.f, 25.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }
 
 TEST_F(Collisions, WhenBroadTestPasses_DoesFullUpdate)
@@ -177,9 +186,10 @@ TEST_F(Collisions, WhenBroadTestPasses_DoesFullUpdate)
     ON_CALL(collision_, sanity_check(Ref(sut), Ref(*entity_))).WillByDefault(Return(true));
 
     EXPECT_CALL(collision_, broad_test(_, _)).WillOnce(Return(false));
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
 
     EXPECT_EQ(sf::Vector2f(10.f, 25.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }
 
 TEST_F(Collisions, WhenNarrowTestPasses_DoesFullUpdate)
@@ -188,9 +198,10 @@ TEST_F(Collisions, WhenNarrowTestPasses_DoesFullUpdate)
     ON_CALL(collision_, broad_test(_, _)).WillByDefault(Return(true));
 
     EXPECT_CALL(collision_, narrow_test(_, _)).WillOnce(Return(1.f));
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
 
     EXPECT_EQ(sf::Vector2f(10.f, 25.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }
 
 TEST_F(Collisions, WhenNarrowTestGivesGT0LT1_DoesPartialUpdate)
@@ -200,9 +211,10 @@ TEST_F(Collisions, WhenNarrowTestGivesGT0LT1_DoesPartialUpdate)
 
     EXPECT_CALL(collision_, narrow_test(_, _)).WillOnce(Return(0.5f));
 
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
 
     EXPECT_EQ(sf::Vector2f(10.f, 22.5f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.25f), ret);
 }
 
 TEST_F(Collisions, WhenNarrowTestGives0_MovesTheOtherEntityByPenetrationAmount)
@@ -213,8 +225,10 @@ TEST_F(Collisions, WhenNarrowTestGives0_MovesTheOtherEntityByPenetrationAmount)
     EXPECT_CALL(collision_, narrow_test(_, _)).WillOnce(Return(0.f));
     EXPECT_CALL(collision_, get_penetration(_, _)).WillOnce(Return(sf::Vector2f(1.f, 2.f)));
 
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
+
     EXPECT_EQ(sf::Vector2f(1.f, 2.f), entity_->get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::Time::Zero, ret);
 }
 
 class MultiCollisions : public TestablePlayer
@@ -262,22 +276,9 @@ TEST_F(MultiCollisions, WhenBothFailNarrowTest_UsesTheSmallerTimeDelta1)
     EXPECT_CALL(collision_, narrow_test(_, entity1_box)).WillOnce(Return(0.8f));
     EXPECT_CALL(collision_, narrow_test(_, entity2_box)).WillOnce(Return(0.5f));
 
-    sut.update(sf::seconds(1.f));
+    auto ret = sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(10.f, 25.f), sut.get_component<Physics>()->get_position());
-}
-
-TEST_F(MultiCollisions, WhenBothFailNarrowTest_UsesTheSmallerTimeDelta2)
-{
-    ON_CALL(collision_, sanity_check(_, _)).WillByDefault(Return(true));
-    ON_CALL(collision_, broad_test(_, _)).WillByDefault(Return(true));
-
-    auto entity1_box = entity1_->get_component<Physics>()->get_box();
-    auto entity2_box = entity2_->get_component<Physics>()->get_box();
-    EXPECT_CALL(collision_, narrow_test(_, entity1_box)).WillOnce(Return(0.8f));
-    EXPECT_CALL(collision_, narrow_test(_, entity2_box)).WillOnce(Return(0.5f));
-
-    sut.update(sf::seconds(2.f));
-    EXPECT_EQ(sf::Vector2f(10.f, 30.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }
 
 TEST_F(MultiCollisions, WhenBothFailNarrowTest_AndOneReturns0_DoesNotMoveThePlayer)
@@ -292,7 +293,8 @@ TEST_F(MultiCollisions, WhenBothFailNarrowTest_AndOneReturns0_DoesNotMoveThePlay
     EXPECT_CALL(collision_, get_penetration(_, entity2_box)).
         WillOnce(Return(sf::Vector2f(1.f, 2.f)));
 
-    sut.update(sf::seconds(1.f));
+    auto ret = sut.update(sf::seconds(1.f));
     EXPECT_EQ(sf::Vector2f(12.f, 14.f), entity2_->get_component<Physics>()->get_position());
     EXPECT_EQ(sf::Vector2f(10.f, 20.f), sut.get_component<Physics>()->get_position());
+    EXPECT_EQ(sf::seconds(0.f), ret);
 }

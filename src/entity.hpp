@@ -18,6 +18,15 @@ public:
     { }
     virtual ~Entity() = default;
 
+    /** \brief Called once before update() loop.
+     *
+     * Allows entities to perform first time setup for this frame.
+     *
+     * Not all entities will require setup, so the default implementation is empty.
+     *
+     * \param[in] frame_length The length of the current frame. */
+    virtual void refresh(sf::Time frame_length) { return; }
+
     /** \brief Update this entity.
      *
      * Called once (or more) per main loop tick.
@@ -30,11 +39,18 @@ public:
      * entity itself, so performance can be tweaked at a global scale.
      *
      * If the Entity is finished with its update (even before it has used the entire time delta
-     * allotted for this frame), it should return 0.
+     * allotted for this frame), it should return the elapsed value passed in.
      *
      * \param[in] elapsed Time delta to perform update over, decouples game logic from framerate.
      * \return Time delta used during this update calculation, or 0 if finished. */
     virtual sf::Time update(sf::Time elapsed) = 0;
+
+    /** \brief Called once after update() loop.
+     *
+     * Allows entities to perform tear down for this frame.
+     *
+     * Not all entities will require tear down, so the default implementation is empty. */
+    virtual void flush() { return; }
 
     /** \brief Checks if entity has the given component.
      *

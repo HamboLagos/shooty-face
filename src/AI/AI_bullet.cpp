@@ -9,7 +9,7 @@ AIBullet::update(sf::Time elapsed)
 {
     auto& bullet = get_bullet();
     if (bullet.is_dead()) {
-        return sf::Time::Zero;
+        return elapsed;
     }
 
     auto* bullet_physics = bullet.get_component<Physics>();
@@ -38,13 +38,13 @@ AIBullet::update(sf::Time elapsed)
         }
     }
 
+    auto used = elapsed * min_percent_safe;
+    bullet_physics->update(used.asSeconds());
+
     if (min_percent_safe < 1.f) {
-        bullet_physics->update(elapsed.asSeconds() * min_percent_safe);
         bullet.apply_damage(*damaged_entity);
         bullet.kill();
-    } else {
-        bullet_physics->update(elapsed.asSeconds());
     }
 
-    return sf::Time::Zero;
+    return used;
 }

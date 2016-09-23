@@ -120,7 +120,8 @@ TEST_F(Update, RemovesAllDeadProjectiles)
     NiceMock<ProjectileMock>* alive2 = new NiceMock<ProjectileMock>();
     sut_get_magazine().push_back(std::unique_ptr<Projectile>(alive2));
 
-    sut.update(sf::Time::Zero);
+    auto ret = sut.update(sf::seconds(0.5f));
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 
     EXPECT_EQ(2, sut_get_magazine().size());
     EXPECT_EQ(alive1, sut_get_magazine()[0].get());
@@ -137,5 +138,6 @@ TEST_F(Update, ProxiesUpdateToEachLiveProjectile)
     sut_get_magazine().push_back(std::unique_ptr<Projectile>(alive2));
     EXPECT_CALL(*alive2, update(sf::seconds(0.5f)));
 
-    sut.update(sf::seconds(0.5f));
+    auto ret = sut.update(sf::seconds(0.5f));
+    EXPECT_EQ(sf::seconds(0.5f), ret);
 }

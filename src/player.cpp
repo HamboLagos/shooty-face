@@ -61,9 +61,10 @@ Player::update(sf::Time elapsed)
         }
     }
 
-    physics->update(elapsed.asSeconds() * min_percent_safe);
+    auto used = elapsed * min_percent_safe;
+    physics->update(used.asSeconds());
 
-    return sf::Time::Zero;
+    return used;
 }
 
 const Renderer::Renderings

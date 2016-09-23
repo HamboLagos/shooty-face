@@ -10,7 +10,7 @@
 class Bullet : public Projectile
 {
 public:
-    static constexpr float SPEED = 750.f; ///< Bullet flight speed
+    static constexpr float SPEED = 500.f; ///< Bullet flight speed
     static constexpr float DAMAGE = 5.f;  ///< Bullet Damage on impact
 
     Bullet();

@@ -30,12 +30,12 @@ length(sf::Vector2f vector)
 
 VectorParts devector(sf::Vector2f vector)
 {
-    return std::make_pair(direction(vector), length(vector));
+    return VectorParts(direction(vector), length(vector));
 }
 
 sf::Vector2f revector(VectorParts parts)
 {
-    return parts.first * parts.second;
+    return parts.direction * parts.length;
 }
 
 }

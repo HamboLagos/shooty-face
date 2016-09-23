@@ -6,7 +6,16 @@
 
 namespace util {
 
-using VectorParts = std::pair<sf::Vector2f, float>; ///< direction, length
+struct VectorParts
+{
+    VectorParts(sf::Vector2f dir = {0.f, 0.f}, float mag = 0.f) :
+        direction(dir),
+        length(mag)
+    { }
+
+    sf::Vector2f direction;
+    float length;
+};
 
 /** \brief Truncates the float values in the given Vector2f. */
 sf::Vector2f pixelate(sf::Vector2f vector);
@@ -17,10 +26,10 @@ sf::Vector2f direction(sf::Vector2f vector);
 /** \brief Gets the magnitude of the given vector. */
 float length(sf::Vector2f vector);
 
-/** \brief Gets the unit_vector and magnitude of the given vector. */
+/** \brief Gets the direction and length of the given vector. */
 VectorParts devector(sf::Vector2f vector);
 
-/** \brief Constructs a vector from the given direction and magnitude. */
+/** \brief Constructs a vector from the given direction and length. */
 sf::Vector2f revector(VectorParts dir_len);
 
 }
