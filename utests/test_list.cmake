@@ -1,5 +1,6 @@
 include(AI/AI_bullet_tests.cmake)
 include(AI/AI_enemy_tests.cmake)
+include(AI/A_star_tests.cmake)
 include(AABB_tests.cmake)
 include(barrier_tests.cmake)
 include(bullet_tests.cmake)

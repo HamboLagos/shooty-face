@@ -22,8 +22,7 @@ AIEnemy::refresh(sf::Time frame_length)
     auto destination = util::devector(player_physics->get_position() - physics->get_position());
     physics->set_velocity(destination.direction * physics->get_move_speed());
 
-    /// TODO determine appropriate epsilon
-    if (util::length(physics->get_velocity()) < 0.01f) {
+    if (util::length(physics->get_velocity()) == 0.f) {
         fraction_to_player_ = 0.f;
         physics->set_velocity(sf::Vector2f(0.f, 0.f));
         return;
