@@ -6,7 +6,7 @@
 
 bool
 is_reachable(const sf::Vector2i& location, const sf::Vector2i& dimensions,
-             const AStar::TileMap& map)
+             const TileMap& map)
 {
     // subtract one from each dimension, because we assume the tile directly at location is
     // always passable
@@ -29,7 +29,7 @@ is_reachable(const sf::Vector2i& location, const sf::Vector2i& dimensions,
 
 static const std::vector<sf::Vector2i>
 get_neighbors(const sf::Vector2i& location, const sf::Vector2i& dimensions,
-              const AStar::TileMap& map)
+              const TileMap& map)
 {
     static const std::vector<sf::Vector2i> directions = {{0, -1}, {-1, 0}, {0, 1}, {1, 0}};
 

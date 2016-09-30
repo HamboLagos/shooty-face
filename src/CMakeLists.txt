@@ -6,6 +6,7 @@ add_executable(${EXECUTABLE_NAME}
     ${PROJECT_SOURCE_DIR}/src/AABB.cpp
     ${PROJECT_SOURCE_DIR}/src/AI/AI_bullet.cpp
     ${PROJECT_SOURCE_DIR}/src/AI/AI_enemy.cpp
+    ${PROJECT_SOURCE_DIR}/src/AI/A_star.cpp
     ${PROJECT_SOURCE_DIR}/src/barrier.cpp
     ${PROJECT_SOURCE_DIR}/src/bullet.cpp
     ${PROJECT_SOURCE_DIR}/src/collision.cpp

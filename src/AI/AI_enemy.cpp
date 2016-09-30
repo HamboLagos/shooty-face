@@ -1,5 +1,6 @@
 #include "AI_enemy.hpp"
 
+#include "A_star.hpp"
 #include "game.hpp"
 #include "components/physics.hpp"
 #include "collision.hpp"
@@ -9,27 +10,34 @@ void
 AIEnemy::refresh(sf::Time frame_length)
 {
     auto* physics = get_enemy().get_component<Physics>();
+    auto& game = Game::instance();
 
-    // attempt to track the player
-    auto* player = Game::instance().get_player();
-    if (player == nullptr) {
+    if (!game.get_player()) {
+        physics->set_velocity(sf::Vector2f{0.f, 0.f});
         fraction_to_player_ = 0.f;
-        physics->set_velocity(sf::Vector2f(0.f, 0.f));
         return;
     }
+    const auto* player_physics = game.get_player()->get_component<Physics>();
 
-    auto* player_physics = player->get_component<Physics>();
-    auto destination = util::devector(player_physics->get_position() - physics->get_position());
-    physics->set_velocity(destination.direction * physics->get_move_speed());
+    const auto& map = game.get_map(&get_entity());
+    const auto start = game.get_tile_for(physics->get_box().get_min_corner());
+    const auto end = game.get_tile_for(player_physics->get_box().get_min_corner());
+    const auto dimensions = game.to_tile_dimensions(physics->get_dimensions());
+
+    auto path = AStar::run(start, end, dimensions, map);
+    if (path.has_path && path.path.size() > 1) {
+        auto destination = game.get_position_for(path.path[1]) + game.get_tile_dimensions()/2.f;
+        auto movement = util::devector(destination - physics->get_position());
+        physics->set_velocity(movement.direction * physics->get_move_speed());
+        fraction_to_player_ =
+            movement.length / util::length(physics->get_velocity() * frame_length.asSeconds());
+    } else {
+        physics->set_velocity(sf::Vector2f(0.f, 0.f));
+    }
 
     if (util::length(physics->get_velocity()) == 0.f) {
         fraction_to_player_ = 0.f;
-        physics->set_velocity(sf::Vector2f(0.f, 0.f));
-        return;
     }
-
-    fraction_to_player_ =
-        destination.length / util::length(physics->get_velocity() * frame_length.asSeconds());
 
     // normalize fraction to [0, 1.f]
     fraction_to_player_ = std::min(fraction_to_player_, 1.f);

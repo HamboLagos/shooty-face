@@ -5,30 +5,12 @@
 #include <queue>
 #include <unordered_map>
 
+#include "tile_map.hpp"
+
 /** \brief Using www.redblobgames.com/pathfinding/a-star/implementation.html */
 class AStar
 {
 public:
-
-    /** \brief A Tile is either passable or not. */
-    struct Tile
-    {
-        bool passable;
-
-        inline bool operator==(const Tile tile) const
-        {
-            return passable == tile.passable;
-        }
-
-        inline bool operator!=(const Tile& tile) const
-        {
-            return !(*this == tile);
-        }
-    };
-
-    /** \brief 2D vector of tiles, [y_vector][x_vector]. */
-    using TileMap = std::vector<std::vector<Tile>>;
-
     AStar()                 = delete;
     AStar(const AStar&)     = delete;
     AStar operator=(const AStar&) = delete;

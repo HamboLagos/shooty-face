@@ -16,6 +16,8 @@
 #include "components/health.hpp"
 
 using namespace std;
+constexpr auto WINDOW_WIDTH  = Game::WINDOW_WIDTH;
+constexpr auto WINDOW_HEIGHT = Game::WINDOW_WIDTH;
 
 void add_renderings(Renderer::Renderings& to, const Renderer::Renderings& from)
 {
@@ -28,9 +30,6 @@ int main(int argc, char *argv[])
               << "."        << shooty_face_VERSION_MINOR
               << "."        << shooty_face_VERSION_REVIS
               << std::endl;
-
-    static constexpr float WINDOW_WIDTH = 1200.f;
-    static constexpr float WINDOW_HEIGHT = 1200.f;
 
     auto& game = Game::instance();
 
