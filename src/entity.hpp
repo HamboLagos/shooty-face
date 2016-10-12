@@ -18,6 +18,8 @@ public:
     { }
     virtual ~Entity() = default;
 
+    virtual void prepare() { return; }
+
     /** \brief Called once before update() loop.
      *
      * Allows entities to perform first time setup for this frame.

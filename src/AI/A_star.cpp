@@ -58,8 +58,7 @@ AStar::run(const sf::Vector2i& start, const sf::Vector2i& end,
            const sf::Vector2i& dimensions, const TileMap& map)
 {
 
-    // validate the start and end positions
-    if (!is_reachable(start, dimensions, map) || !is_reachable(end, dimensions, map)) {
+    if (!is_reachable(end, dimensions, map)) {
         return Result{false, Path()};
     }
 

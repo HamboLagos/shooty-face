@@ -5,6 +5,7 @@ add_executable(
     AI/${TEST_NAME}.cpp
     ${CMAKE_SOURCE_DIR}/src/AABB.cpp
     ${CMAKE_SOURCE_DIR}/src/AI/AI_enemy.cpp
+    ${CMAKE_SOURCE_DIR}/src/AI/A_star.cpp
     ${CMAKE_SOURCE_DIR}/src/enemy.cpp
     ${CMAKE_SOURCE_DIR}/src/game.cpp
     ${CMAKE_SOURCE_DIR}/src/player.cpp

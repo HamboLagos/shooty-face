@@ -26,13 +26,15 @@ Game::add_player()
     return player_;
 }
 
-void
-Game::refresh_map()
+const TileMap
+Game::get_map(const Entity* ignore_entity)
 {
     initialize_map();
+    TileMap copy = map_;
 
     for(auto& entity : entities_) {
-        if (player_ == entity.get()           ||
+        if (ignore_entity == entity.get()     ||
+            player_ == entity.get()           ||
             !entity->has_component<Physics>() ||
             entity->get_component<Physics>()->is_passable()) {
             continue;
@@ -47,31 +49,7 @@ Game::refresh_map()
         for (int y = 0; y < tile_dimensions.y; ++y) {
             for (int x = 0; x < tile_dimensions.x; ++x) {
                 try {
-                    map_.at(min_tile.y + y).at(min_tile.x + x).passable = false;
-                } catch (std::out_of_range&) {
-                    // nothing to do here, entity dimensions exceed map_ bounds
-                }
-            }
-        }
-    }
-}
-
-const TileMap
-Game::get_map(const Entity* ignore_entity)
-{
-    TileMap copy = map_;
-    if (ignore_entity && ignore_entity->has_component<Physics>()) {
-
-        const auto* physics = ignore_entity->get_component<Physics>();
-        auto box = physics->get_box();
-        auto min_tile = get_tile_for(box.get_min_corner());
-        auto max_tile = get_tile_for(box.get_max_corner());
-        auto tile_dimensions = sf::Vector2i{1, 1} + (max_tile - min_tile);
-
-        for (int y = 0; y < tile_dimensions.y; ++y) {
-            for (int x = 0; x < tile_dimensions.x; ++x) {
-                try {
-                    copy.at(min_tile.y + y).at(min_tile.x + x).passable = true;
+                    copy.at(min_tile.y + y).at(min_tile.x + x).passable = false;
                 } catch (std::out_of_range&) {
                     // nothing to do here, entity dimensions exceed map_ bounds
                 }

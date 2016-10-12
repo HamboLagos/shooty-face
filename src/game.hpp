@@ -33,9 +33,6 @@ public:
     Player* add_player();
     inline Player* get_player() { return player_; };
 
-    /** \brief (re)Initializes the tile map for this game. */
-    void refresh_map();
-
     /** \brief Returns a Tile Map with the given entity marked as passable.
      *
      * Will ignore tiles that would be set as impassable by the given entity. */

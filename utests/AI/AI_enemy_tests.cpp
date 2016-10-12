@@ -6,6 +6,7 @@
 #include "enemy.hpp"
 #include "mocks/collision_mock.hpp"
 #include "mocks/entity_mock.hpp"
+#include "mocks/rate_limit_mock.hpp"
 #include "game.hpp"
 #include "components/physics.hpp"
 
@@ -15,11 +16,15 @@ class TestableAIEnemy : public Test
 {
 protected:
     Enemy enemy_;
+    NiceMock<RateLimitMock>* rate_limit_;
     AIEnemy sut;
 
     TestableAIEnemy() :
-        sut(enemy_)
-    { }
+        rate_limit_(new NiceMock<RateLimitMock>),
+        sut(enemy_, std::unique_ptr<RateLimitIF>(rate_limit_))
+    {
+        ON_CALL(*rate_limit_, check()).WillByDefault(Return(true));
+    }
 };
 
 

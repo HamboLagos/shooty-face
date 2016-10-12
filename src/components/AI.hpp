@@ -18,6 +18,8 @@ public:
     { }
     virtual ~AI() = default;
 
+    virtual void prepare() { return; }
+
     /** \brief Default implementation is empty.
      *
      * \sa Entity::refresh(). */
@@ -32,9 +34,4 @@ public:
      *
      * \sa Entity::flush(). */
     virtual void flush()   { return; }
-
-    inline const Path& get_path() { return path_; }
-
-protected:
-    Path path_;
 };

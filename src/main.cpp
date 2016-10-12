@@ -12,9 +12,12 @@
 #include "bullet.hpp"
 #include "barrier.hpp"
 #include "enemy.hpp"
+#include "rate_limit.hpp"
 
 #include "components/physics.hpp"
 #include "components/health.hpp"
+
+#include "AI/AI_enemy.hpp"
 
 using namespace std;
 constexpr auto WINDOW_WIDTH  = Game::WINDOW_WIDTH;
@@ -24,6 +27,38 @@ void add_renderings(Renderer::Renderings& to, const Renderer::Renderings& from)
 {
     to.insert(to.end(), from.begin(), from.end());
 }
+
+struct FrameLength
+{
+    sf::Time current;
+    sf::Time min;
+    sf::Time max;
+
+    FrameLength()
+    {
+        reset();
+    }
+
+    void reset()
+    {
+        current = sf::Time::Zero;
+        min = sf::seconds(100.f);
+        max = sf::seconds(-100.f);
+    }
+
+    void update(sf::Time frame_length)
+    {
+        current = frame_length;
+
+        if (frame_length < min) {
+            min = frame_length;
+        }
+
+        if (frame_length > max) {
+            max = frame_length;
+        }
+    }
+};
 
 int main(int argc, char *argv[])
 {
@@ -50,7 +85,7 @@ int main(int argc, char *argv[])
     auto& game = Game::instance();
 
     sf::RenderWindow app(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Shooty Face");
-    /* app.setFramerateLimit(250); */
+    app.setFramerateLimit(250);
 
     auto& player = *game.add_player();
     player.get_component<Physics>()->set_position(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT)/2.f);
@@ -59,7 +94,7 @@ int main(int argc, char *argv[])
     Gun& gun = static_cast<Gun&>(*game.entity_collection().back().get());
     gun.set_ammunition(std::make_unique<BulletAmmunition>());
 
-    std::vector<Barrier*> barriers(4); ///< top, left, bottom, right
+    std::vector<Barrier*> barriers(6); ///< top, left, bottom, right
     for(auto& barrier : barriers) {
         barrier = new Barrier();
         game.entity_collection().emplace_back(barrier);
@@ -75,6 +110,17 @@ int main(int argc, char *argv[])
     barriers[3]->get_component<Physics>()->set_position({WINDOW_WIDTH - border_thickness/2.f, WINDOW_HEIGHT/2.f});
     barriers[3]->get_component<Physics>()->set_dimensions({border_thickness, WINDOW_HEIGHT});
 
+    barriers[4]->get_component<Physics>()->set_position({WINDOW_WIDTH/2.f, 3.f*WINDOW_HEIGHT/8.f});
+    barriers[4]->get_component<Physics>()->set_dimensions({WINDOW_WIDTH/2.f, border_thickness});
+    barriers[5]->get_component<Physics>()->set_position({3.f*WINDOW_WIDTH/8.f, WINDOW_HEIGHT/2.f});
+    barriers[5]->get_component<Physics>()->set_dimensions({border_thickness, WINDOW_HEIGHT/2.f});
+    /* barriers[5]->get_component<Physics>()->set_position({border_thickness/2.f, WINDOW_HEIGHT/2.f}); */
+    /* barriers[5]->get_component<Physics>()->set_dimensions({border_thickness, WINDOW_HEIGHT}); */
+    /* barriers[6]->get_component<Physics>()->set_position({WINDOW_WIDTH/2.f, WINDOW_HEIGHT - border_thickness/2.f}); */
+    /* barriers[6]->get_component<Physics>()->set_dimensions({WINDOW_WIDTH, border_thickness}); */
+    /* barriers[7]->get_component<Physics>()->set_position({WINDOW_WIDTH - border_thickness/2.f, WINDOW_HEIGHT/2.f}); */
+    /* barriers[7]->get_component<Physics>()->set_dimensions({border_thickness, WINDOW_HEIGHT}); */
+
     barriers.clear();
 
     std::vector<Enemy*> enemies(24);
@@ -85,8 +131,9 @@ int main(int argc, char *argv[])
 
         auto* physics = enemy->get_component<Physics>();
         if (ndx++ <= 3) {
-            physics->set_move_speed(physics->get_move_speed() * 1.5f);
             physics->set_dimensions(physics->get_dimensions() * 1.5f);
+        } else {
+            physics->set_move_speed(physics->get_move_speed() * 0.5f);
         }
 
         game.entity_collection().emplace_back(enemy);
@@ -96,13 +143,13 @@ int main(int argc, char *argv[])
     sf::Vector2f zero_offset = {border_thickness + enemies[0]->get_component<Physics>()->get_extents().x,
                                 border_thickness + enemies[0]->get_component<Physics>()->get_extents().y};
     enemies[0]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
-    auto& enemy_example = *enemies[0];
     enemies[1]->get_component<Physics>()->set_position({zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
     enemies[2]->get_component<Physics>()->set_position({WINDOW_WIDTH - zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
     enemies[3]->get_component<Physics>()->set_position({WINDOW_WIDTH - zero_offset.x, zero_offset.y});
 
     zero_offset = {WINDOW_WIDTH/2.f, WINDOW_HEIGHT/4.f};
     enemies[4]->get_component<Physics>()->set_position({zero_offset.x - WINDOW_WIDTH/16.f, zero_offset.y});
+    auto& enemy_example = *enemies[4];
     enemies[5]->get_component<Physics>()->set_position({zero_offset.x - WINDOW_WIDTH/8.f, zero_offset.y});
     enemies[6]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
     enemies[7]->get_component<Physics>()->set_position({zero_offset.x + WINDOW_WIDTH/8.f, zero_offset.y});
@@ -217,13 +264,17 @@ int main(int argc, char *argv[])
         /*     std::cout << "Projectile Count: " << projectile_count << std::endl; */
         /* } */
 
-        Game::instance().refresh_map();
-        auto frame_length = clock.restart();
+        static FrameLength frame_length;
+        frame_length.update(clock.restart());
 
         for(auto& entity : game.entities()) {
-            entity->refresh(frame_length);
+            entity->prepare();
+        }
 
-            auto remaining = frame_length;
+        for(auto& entity : game.entities()) {
+            entity->refresh(frame_length.current);
+
+            auto remaining = frame_length.current;
             int loops = 2;
             bool did_portal = false;
             while(remaining > sf::Time::Zero && loops--)
@@ -283,32 +334,49 @@ int main(int argc, char *argv[])
         impassable_tile.setOutlineThickness(-1.f);
 
         //draw tile map
-        sf::Vector2i position = {0, 0};
-        for(const auto& row : map) {
-            position.x = 0;
-            for(const auto& tile : row) {
-                if (!tile.passable) {
-                    impassable_tile.setPosition(Game::instance().get_position_for(position));
-                    app.draw(impassable_tile);
-                }
-                ++position.x;
-            }
-        ++position.y;
-        }
+        /* sf::Vector2i position = {0, 0}; */
+        /* for(const auto& row : map) { */
+        /*     position.x = 0; */
+        /*     for(const auto& tile : row) { */
+        /*         if (!tile.passable) { */
+        /*             impassable_tile.setPosition(Game::instance().get_position_for(position)); */
+        /*             app.draw(impassable_tile); */
+        /*         } */
+        /*         ++position.x; */
+        /*     } */
+        /* ++position.y; */
+        /* } */
 
         // draw tile path
         sf::RectangleShape path_tile;
-        path_tile.setFillColor(sf::Color::Blue);
         path_tile.setSize(Game::instance().get_tile_dimensions());
         path_tile.setOutlineColor(sf::Color::Black);
         path_tile.setOutlineThickness(-1.f);
 
-        for(const auto& tile : enemy_example.get_path()) {
+        const auto* ai = static_cast<AIEnemy*>(enemy_example.get_component<AI>());
+        const auto& path = ai->get_path();
+        int path_ndx = 0;
+        for(const auto& tile : path) {
+            if (path_ndx == ai->get_path_ndx()) {
+                path_tile.setFillColor(sf::Color::Red);
+            } else {
+                path_tile.setFillColor(sf::Color::Blue);
+            }
+            ++path_ndx;
+
             path_tile.setPosition(Game::instance().get_position_for(tile));
             app.draw(path_tile);
         }
 
-        frame_rate.setString("FrameRate: " + std::to_string(1.f/frame_length.asSeconds()));
+        static RateLimit frame_length_reset(0.5);
+        if (frame_length_reset.check()) {
+            frame_length_reset.renew();
+            frame_length.reset();
+        }
+
+        frame_rate.setString("Min: " + std::to_string(1.f/frame_length.max.asSeconds()) +
+                             "Max: " + std::to_string(1.f/frame_length.min.asSeconds()) +
+                             "Cur: " + std::to_string(1.f/frame_length.current.asSeconds()));
         app.draw(frame_rate);
 
         timer.setString("Timer: " + std::to_string(1.f/Game::instance().get_timer().asSeconds()));
