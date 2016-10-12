@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include <SFML/System/Vector2.hpp>
 #include <vector>
 #include <queue>
@@ -51,18 +53,45 @@ private:
 
     /// Key == location, Value == cost function result for that tile
     using CostMap = std::unordered_map<sf::Vector2i, float, Hash>;
+    static CostMap cost_so_far_;
 
     /// Key == location, Value == which location comes before it in the traversal
     using FromMap = std::unordered_map<sf::Vector2i, sf::Vector2i, Hash>;
+    static FromMap came_from_;
 
     /// <cost, location> element pair
     using PQElement = std::pair<float, sf::Vector2i>;
 
     struct PQElementComp
     {
-        bool operator()(const PQElement& a, const PQElement& b) const { return a.first < b.first; }
+        bool operator()(const PQElement& a, const PQElement& b) const { return a.first > b.first; }
     };
+
+    /* struct myPQ */
+    /* { */
+    /*     std::vector<PQElement> elements_; */
+
+    /*     bool empty() { return elements_.empty(); } */
+    /*     size_t size() { return elements_.size(); } */
+
+    /*     const PQElement& top() */
+    /*     { */
+    /*         return *std::max_element(elements_.begin(), elements_.end(), PQElementComp()); */
+    /*     } */
+
+    /*     void pop() */
+    /*     { */
+    /*         elements_.erase(std::max_element(elements_.begin(), elements_.end(), PQElementComp())); */
+    /*     } */
+
+    /*     void emplace(float prio, sf::Vector2i location) */
+    /*     { */
+    /*         elements_.emplace_back(prio, location); */
+    /*     } */
+    /* }; */
 
     /// Priority Queue for sorting the visited locations by their cost
     using PQ = std::priority_queue<PQElement, std::vector<PQElement>, PQElementComp>;
+    /* using PQ = myPQ; */
+    static PQ frontier_;
 };

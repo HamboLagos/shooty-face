@@ -1,4 +1,5 @@
 #pragma once
+
 /** \brief A Tile is either passable or not. */
 struct Tile
 {

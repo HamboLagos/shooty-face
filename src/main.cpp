@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Graphics/Text.hpp>
 #include <SFML/Window/Event.hpp>
 
 #include "config.h"
@@ -26,6 +27,21 @@ void add_renderings(Renderer::Renderings& to, const Renderer::Renderings& from)
 
 int main(int argc, char *argv[])
 {
+    sf::Font font;
+    font.loadFromFile("../fonts/Aileron-Regular.otf");
+
+    sf::Text frame_rate;
+    frame_rate.setFont(font);
+    frame_rate.setCharacterSize(50);
+    frame_rate.setColor(sf::Color::Blue);
+    frame_rate.setPosition(sf::Vector2f(0.f, 0.f));
+
+    sf::Text timer;
+    timer.setFont(font);
+    timer.setCharacterSize(50);
+    timer.setColor(sf::Color::Blue);
+    timer.setPosition(sf::Vector2f(0.f, 40.f));
+
     std::cout << "Version " << shooty_face_VERSION_MAJOR
               << "."        << shooty_face_VERSION_MINOR
               << "."        << shooty_face_VERSION_REVIS
@@ -34,7 +50,7 @@ int main(int argc, char *argv[])
     auto& game = Game::instance();
 
     sf::RenderWindow app(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Shooty Face");
-    app.setFramerateLimit(250);
+    /* app.setFramerateLimit(250); */
 
     auto& player = *game.add_player();
     player.get_component<Physics>()->set_position(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT)/2.f);
@@ -80,6 +96,7 @@ int main(int argc, char *argv[])
     sf::Vector2f zero_offset = {border_thickness + enemies[0]->get_component<Physics>()->get_extents().x,
                                 border_thickness + enemies[0]->get_component<Physics>()->get_extents().y};
     enemies[0]->get_component<Physics>()->set_position({zero_offset.x, zero_offset.y});
+    auto& enemy_example = *enemies[0];
     enemies[1]->get_component<Physics>()->set_position({zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
     enemies[2]->get_component<Physics>()->set_position({WINDOW_WIDTH - zero_offset.x, WINDOW_HEIGHT - zero_offset.y});
     enemies[3]->get_component<Physics>()->set_position({WINDOW_WIDTH - zero_offset.x, zero_offset.y});
@@ -200,6 +217,7 @@ int main(int argc, char *argv[])
         /*     std::cout << "Projectile Count: " << projectile_count << std::endl; */
         /* } */
 
+        Game::instance().refresh_map();
         auto frame_length = clock.restart();
 
         for(auto& entity : game.entities()) {
@@ -251,9 +269,51 @@ int main(int argc, char *argv[])
         }
 
         app.clear(sf::Color::White);
+
         for(const auto* rendering : all_renderings) {
             app.draw(*rendering);
         }
+
+        auto map = Game::instance().get_map(&enemy_example);
+
+        sf::RectangleShape impassable_tile;
+        impassable_tile.setFillColor(sf::Color::Red);
+        impassable_tile.setSize(Game::instance().get_tile_dimensions());
+        impassable_tile.setOutlineColor(sf::Color::Black);
+        impassable_tile.setOutlineThickness(-1.f);
+
+        //draw tile map
+        sf::Vector2i position = {0, 0};
+        for(const auto& row : map) {
+            position.x = 0;
+            for(const auto& tile : row) {
+                if (!tile.passable) {
+                    impassable_tile.setPosition(Game::instance().get_position_for(position));
+                    app.draw(impassable_tile);
+                }
+                ++position.x;
+            }
+        ++position.y;
+        }
+
+        // draw tile path
+        sf::RectangleShape path_tile;
+        path_tile.setFillColor(sf::Color::Blue);
+        path_tile.setSize(Game::instance().get_tile_dimensions());
+        path_tile.setOutlineColor(sf::Color::Black);
+        path_tile.setOutlineThickness(-1.f);
+
+        for(const auto& tile : enemy_example.get_path()) {
+            path_tile.setPosition(Game::instance().get_position_for(tile));
+            app.draw(path_tile);
+        }
+
+        frame_rate.setString("FrameRate: " + std::to_string(1.f/frame_length.asSeconds()));
+        app.draw(frame_rate);
+
+        timer.setString("Timer: " + std::to_string(1.f/Game::instance().get_timer().asSeconds()));
+        app.draw(timer);
+
         app.display();
     }
     return 0;

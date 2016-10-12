@@ -8,11 +8,11 @@ using namespace testing;
 class TestableAStar : public Test
 {
 protected:
-    AStar::Tile st = AStar::Tile{true};
-    AStar::Tile nd = AStar::Tile{true};
+    Tile st = {true};
+    Tile nd = {true};
 
-    AStar::Tile go = AStar::Tile{true};
-    AStar::Tile no = AStar::Tile{false};
+    Tile go = {true};
+    Tile no = {false};
 };
 
 class InvalidParams : public TestableAStar
@@ -20,7 +20,7 @@ class InvalidParams : public TestableAStar
 protected:
     sf::Vector2i dimensions = {1, 1};
 
-    AStar::TileMap map = { {st} };
+    TileMap map = { {st} };
 };
 
 TEST_F(InvalidParams, StartOrEndOutsideMapIndices)
@@ -59,7 +59,7 @@ class OneDimensionalMapInY : public TestableAStar
 {
 protected:
     sf::Vector2i dimensions = {1, 1};
-    AStar::TileMap map = {
+    TileMap map = {
         {st, go, go, nd}
     };
 };
@@ -102,7 +102,7 @@ class OneDimensionalMapInX : public TestableAStar
 protected:
     sf::Vector2i dimensions = {1, 1};
 
-    AStar::TileMap map = {
+    TileMap map = {
         {st},
         {go},
         {go},
@@ -148,7 +148,7 @@ class NarrowPassages : public TestableAStar
 protected:
     sf::Vector2i dimensions = {1, 3};
 
-    AStar::TileMap passable = {
+    TileMap passable = {
         {no, no, no, no, no},
         {st, go, go, go, nd},
         {st, go, go, go, nd},
@@ -157,7 +157,7 @@ protected:
 
     };
 
-    AStar::TileMap impassable = {
+    TileMap impassable = {
         {no, no, no, no, no},
         {st, go, go, go, nd},
         {st, go, go, go, nd},
@@ -203,7 +203,7 @@ class VerticalObstables : public TestableAStar
 protected:
     sf::Vector2i dimensions = {1, 2};
 
-    AStar::TileMap map = {
+    TileMap map = {
    /*    0   1   2   3   4   5   6  */
    /*0*/{go, go, go, no, go, go, go},
    /*1*/{go, go, go, no, go, go, go},
@@ -251,7 +251,7 @@ class HorizontalObstables : public TestableAStar
 protected:
     sf::Vector2i dimensions = {2, 1};
 
-    AStar::TileMap map = {
+    TileMap map = {
    /*    0   1   2   3   4  */
    /*0*/{nd, nd, go, go, go},
    /*1*/{no, no, no, go, go},
@@ -294,4 +294,46 @@ TEST_F(HorizontalObstables, NavigatesAroundThem)
     EXPECT_EQ(sf::Vector2i({2, 0}), path.path[16]);
     EXPECT_EQ(sf::Vector2i({1, 0}), path.path[17]);
     EXPECT_EQ(sf::Vector2i(end),    path.path[18]);
+}
+
+class LargeOpenSpace : public TestableAStar
+{
+protected:
+    sf::Vector2i dimensions = {2, 2};
+
+    TileMap map = {
+   /*    0   1   2   3   4   5  */
+   /*0*/{go, go, go, go, go, nd, nd},
+   /*1*/{go, go, go, go, go, nd, nd},
+   /*2*/{go, go, go, go, go, go, go},
+   /*3*/{go, go, go, go, go, go, go},
+   /*4*/{go, go, go, go, go, go, go},
+   /*5*/{st, st, go, go, go, go, go},
+   /*6*/{st, st, go, go, go, go, go},
+    };
+};
+
+TEST_F(LargeOpenSpace, FindsMostDirectRoute)
+{
+    sf::Vector2i start = {0, 5};
+    sf::Vector2i end   = {5, 0};
+    ASSERT_EQ(map.at(start.y).at(start.x), st);
+    ASSERT_EQ(map.at(end.y).at(end.x), nd);
+
+    auto path = AStar::run(start, end, dimensions, map);
+
+    EXPECT_TRUE(path.has_path);
+
+    ASSERT_EQ(11, path.path.size());
+    EXPECT_EQ(sf::Vector2i(start),  path.path[0]);
+    EXPECT_EQ(sf::Vector2i({0, 4}), path.path[1]);
+    EXPECT_EQ(sf::Vector2i({1, 4}), path.path[2]);
+    EXPECT_EQ(sf::Vector2i({1, 3}), path.path[3]);
+    EXPECT_EQ(sf::Vector2i({2, 3}), path.path[4]);
+    EXPECT_EQ(sf::Vector2i({2, 2}), path.path[5]);
+    EXPECT_EQ(sf::Vector2i({3, 2}), path.path[6]);
+    EXPECT_EQ(sf::Vector2i({3, 1}), path.path[7]);
+    EXPECT_EQ(sf::Vector2i({4, 1}), path.path[8]);
+    EXPECT_EQ(sf::Vector2i({4, 0}), path.path[9]);
+    EXPECT_EQ(sf::Vector2i(end),    path.path[10]);
 }

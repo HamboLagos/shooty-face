@@ -1,8 +1,17 @@
+#include <iostream>
+
 #include <stdexcept>
 #include <algorithm>
 
+#include <SFML/System/Clock.hpp>
+
 #include "A_star.hpp"
 #include "utils.hpp"
+#include "game.hpp"
+
+AStar::CostMap AStar::cost_so_far_;
+AStar::FromMap AStar::came_from_;
+AStar::PQ AStar::frontier_;
 
 bool
 is_reachable(const sf::Vector2i& location, const sf::Vector2i& dimensions,
@@ -48,6 +57,7 @@ AStar::Result
 AStar::run(const sf::Vector2i& start, const sf::Vector2i& end,
            const sf::Vector2i& dimensions, const TileMap& map)
 {
+
     // validate the start and end positions
     if (!is_reachable(start, dimensions, map) || !is_reachable(end, dimensions, map)) {
         return Result{false, Path()};
@@ -57,19 +67,22 @@ AStar::run(const sf::Vector2i& start, const sf::Vector2i& end,
         return Result{true, Path{start}};
     }
 
-    auto cost_so_far = CostMap();
-    cost_so_far[start] = 0.f;
+    cost_so_far_.clear();
+    came_from_.clear();
+    while(!frontier_.empty()) { frontier_.pop(); }
 
-    auto came_from = FromMap();
-    came_from[start] = start;
+    cost_so_far_[start] = 0.f;
+    came_from_[start] = start;
+    frontier_.emplace(0.f, start);
 
-    auto frontier = PQ();
-    frontier.emplace(0.f, start);
-
-    while(!frontier.empty())
+    int loops = 0;
+    int max_size = 0;
+    sf::Clock clock;
+    while(!frontier_.empty())
     {
-        auto current = frontier.top().second;
-        frontier.pop();
+        ++loops;
+        auto current = frontier_.top().second;
+        frontier_.pop();
 
         if (current == end) {
             break;
@@ -77,18 +90,28 @@ AStar::run(const sf::Vector2i& start, const sf::Vector2i& end,
 
         const auto neighbors = get_neighbors(current, dimensions, map);
         for(const auto& next : neighbors) {
-            float cost = cost_so_far[current] + util::length(sf::Vector2f(current - next));
-            if (!cost_so_far.count(next) || cost < cost_so_far[next]) {
-                cost_so_far[next] = cost;
-                came_from[next] = current;
-                float priority = cost + util::length(sf::Vector2f(end - next));
-                frontier.emplace(priority, next);
+            float cost = cost_so_far_[current] +
+                util::length(Game::get_position_for(current) -
+                             Game::get_position_for(next));
+            if (!cost_so_far_.count(next) || cost < cost_so_far_[next]) {
+                cost_so_far_[next] = cost;
+                came_from_[next] = current;
+                float priority = cost +
+                    util::length(Game::get_position_for(end) -
+                                 Game::get_position_for(next));
+                frontier_.emplace(priority, next);
+
+                if (frontier_.size() > max_size) {
+                    max_size = frontier_.size();
+                }
             }
         }
     }
+    Game::instance().set_timer(clock.getElapsedTime());
+    std::cout << "loops: " << loops << " size: " << max_size << std::endl;
 
     // we didn't find a way through
-    if (!came_from.count(end)) {
+    if (!came_from_.count(end)) {
         return {false, Path()};
     }
 
@@ -96,7 +119,7 @@ AStar::run(const sf::Vector2i& start, const sf::Vector2i& end,
     auto current = end;
     while (current != start) {
         path.push_back(current);
-        current = came_from[current];
+        current = came_from_[current];
     }
     path.push_back(start);
 

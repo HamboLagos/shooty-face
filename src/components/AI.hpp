@@ -1,6 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include <SFML/System/Time.hpp>
+#include <SFML/System/Vector2.hpp>
 
 #include "component.hpp"
 
@@ -8,6 +11,8 @@
 class AI : public Component
 {
 public:
+    using Path = std::vector<sf::Vector2i>;
+
     AI(Entity& entity) :
         Component(entity)
     { }
@@ -27,4 +32,9 @@ public:
      *
      * \sa Entity::flush(). */
     virtual void flush()   { return; }
+
+    inline const Path& get_path() { return path_; }
+
+protected:
+    Path path_;
 };
